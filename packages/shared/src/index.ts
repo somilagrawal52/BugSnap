@@ -87,7 +87,12 @@ export function safeLocation(value: string) {
   return { origin: url.origin, pathname: url.pathname };
 }
 export function normalizeOrigin(value: string, development = false) {
-  const url = new URL(value);
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error('Enter a valid URL origin including scheme (e.g. https://app.example.com)');
+  }
   if (url.username || url.password || url.search || url.hash || url.pathname !== '/')
     throw new Error('Enter an origin without a path, query, or credentials.');
   if (
@@ -97,4 +102,5 @@ export function normalizeOrigin(value: string, development = false) {
     throw new Error('Use HTTPS, or localhost in development.');
   return url.origin;
 }
-export const label = (v: string) => v.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+export const label = (v?: string | null) =>
+  (v || '').replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());

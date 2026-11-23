@@ -50,9 +50,9 @@ export function collectContext() {
             : 'Unknown';
   return {
     origin: location.origin,
-    pathname: location.pathname,
-    browser,
-    os,
+    pathname: (location.pathname || '/').slice(0, 1500),
+    browser: browser.slice(0, 80),
+    os: os.slice(0, 80),
     viewport: { width: innerWidth, height: innerHeight },
     timestamp: new Date().toISOString(),
   };
@@ -158,6 +158,11 @@ export async function init(config: Config) {
       if (e.data.type === 'ready') {
         ready = true;
         send();
+      }
+      if (e.data.type === 'submitted') {
+        try {
+          window.dispatchEvent(new CustomEvent('bugsnap:submitted', { detail: { channel } }));
+        } catch {}
       }
       if (e.data.type === 'close') closeWidget();
     };

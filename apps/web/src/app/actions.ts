@@ -15,23 +15,28 @@ function failure(e: unknown): ActionState {
   if (e instanceof z.ZodError)
     return { error: e.issues[0]?.message || 'Check the form and try again.' };
   const message = e instanceof Error ? e.message : '';
+  const lower = message.toLowerCase();
+  if (lower.includes('unique') || lower.includes('duplicate key')) {
+    if (lower.includes('slug'))
+      return { error: 'A project with this slug already exists in this workspace.' };
+    return { error: 'An item with this identifier already exists in this workspace.' };
+  }
   const allowed = [
     'limit',
     'required',
     'forbidden',
     'origin',
-    'HTTPS',
-    'Invitation',
+    'https',
+    'invitation',
     'verify',
-    'Password',
     'password',
     'credentials',
     'registered',
     'email',
-    'Project unavailable',
+    'project unavailable',
   ];
   return {
-    error: allowed.some((s) => message.toLowerCase().includes(s.toLowerCase()))
+    error: allowed.some((s) => lower.includes(s))
       ? message.slice(0, 220)
       : 'Unable to save. Check your input and try again.',
   };
@@ -84,7 +89,11 @@ export async function resetPassword(_prev: ActionState, form: FormData): Promise
     if (!user) return { error: 'Open the password reset link from your email first.' };
     assertResult(
       await db.auth.updateUser({
-        password: z.string().min(10).max(128).parse(field(form, 'password')),
+        password: z
+          .string()
+          .min(10, 'Password must contain at least 10 characters.')
+          .max(128)
+          .parse(field(form, 'password')),
       }),
     );
     return { redirect: '/dashboard' };
@@ -95,6 +104,9 @@ export async function resetPassword(_prev: ActionState, form: FormData): Promise
 export async function logout() {
   const db = await sessionClient();
   await db.auth.signOut();
+  const jar = await cookies();
+  jar.delete('bugsnap_workspace');
+  jar.delete('bugsnap_github_state');
   const { redirect } = await import('next/navigation');
   redirect('/login');
 }
@@ -116,6 +128,8 @@ export async function switchWorkspace(form: FormData) {
     path: '/',
   });
   revalidatePath('/dashboard', 'layout');
+  const { redirect } = await import('next/navigation');
+  redirect('/dashboard');
 }
 export async function onboard(_prev: ActionState, form: FormData): Promise<ActionState> {
   try {
@@ -264,8 +278,11 @@ export async function inviteMember(_prev: ActionState, form: FormData): Promise<
 }
 export async function acceptInvitation(_prev: ActionState, form: FormData): Promise<ActionState> {
   try {
+    const raw = field(form, 'token').trim();
+    if (!raw || raw.length !== 72)
+      return { error: 'Invalid or missing invitation token. Check the invitation link.' };
     const db = await sessionClient();
-    const token = z.string().length(72).parse(field(form, 'token'));
+    const token = z.string().length(72).parse(raw);
     const result = await db.rpc('accept_invitation', { p_hash: hash(token) });
     assertResult(result);
     if (!result.data) throw new Error('Workspace could not be created or selected.');

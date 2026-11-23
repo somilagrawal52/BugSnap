@@ -15,9 +15,16 @@ export default async function Invite({
         <p>
           <Link href="/login">Sign in</Link> or <Link href="/signup">create an account</Link>
         </p>
-        <ActionForm action={acceptInvitation} submit="Accept invitation">
-          <input type="hidden" name="token" value={token || ''} />
-        </ActionForm>
+        {!token ? (
+          <p className="notice error">
+            Missing invitation token. Please open the complete invitation link provided by your
+            workspace administrator.
+          </p>
+        ) : (
+          <ActionForm action={acceptInvitation} submit="Accept invitation">
+            <input type="hidden" name="token" value={token} />
+          </ActionForm>
+        )}
       </div>
     </main>
   );

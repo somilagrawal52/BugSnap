@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Brand />
+        <Brand href="/dashboard" />
         <form action={switchWorkspace} className="workspace-switch">
           <span className="workspace-avatar">{org.name.slice(0, 1).toUpperCase()}</span>
           <label className="sr-only" htmlFor="workspace">

@@ -13,7 +13,7 @@ export default function Setup() {
       <ol>
         <li>Create a Supabase project or run the local Supabase CLI with Docker.</li>
         <li>
-          Apply both SQL files in <code>supabase/migrations</code> in order.
+          Apply the SQL migration files in <code>supabase/migrations</code> in numeric order.
         </li>
         <li>
           Copy <code>.env.example</code> to <code>apps/web/.env.local</code>. Set the app URL,

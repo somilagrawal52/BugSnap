@@ -64,7 +64,7 @@ export async function GET(request: Request) {
       .single();
     if (result.error) throw result.error;
     await refreshRepositories(result.data);
-    jar.delete('bugsnap_github_state');
+    jar.delete({ name: 'bugsnap_github_state', path: '/api/github' });
     return NextResponse.redirect(appUrl() + '/dashboard/integrations?connected=1');
   } catch {
     return NextResponse.redirect(appUrl() + '/dashboard/integrations?error=authorization');

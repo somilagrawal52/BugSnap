@@ -78,3 +78,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Widget is not configured' }, { status: 503 });
   }
 }
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin') || '*';
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      Vary: 'Origin',
+      'Cache-Control': 'no-store',
+    },
+  });
+}

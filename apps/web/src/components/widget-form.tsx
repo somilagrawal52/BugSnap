@@ -188,7 +188,15 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
     <main
       className="widget-shell"
       onPaste={(e) => {
-        const image = Array.from(e.clipboardData.files).find((f) => f.type.startsWith('image/'));
+        let image = Array.from(e.clipboardData.files || []).find((f) => f.type.startsWith('image/'));
+        if (!image && e.clipboardData.items) {
+          for (const item of Array.from(e.clipboardData.items)) {
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+              image = item.getAsFile() || undefined;
+              if (image) break;
+            }
+          }
+        }
         if (image) {
           e.preventDefault();
           chooseFile(image);
@@ -269,9 +277,22 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
               </button>
             </div>
           ) : (
-            <label className="upload-zone">
+            <label
+              className="upload-zone"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const dropped = Array.from(e.dataTransfer.files || []).find((f) =>
+                  f.type.startsWith('image/'),
+                );
+                if (dropped) chooseFile(dropped);
+              }}
+            >
               <ImagePlus size={22} />
-              <span>Choose an image or paste it here</span>
+              <span>Choose an image, drag & drop, or paste it</span>
               <small>PNG, JPEG, WebP · up to 5 MB</small>
               <input
                 type="file"

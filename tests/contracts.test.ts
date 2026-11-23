@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { reportSchema, safeLocation, normalizeOrigin } from '../packages/shared/src';
+import { reportSchema, safeLocation, normalizeOrigin, label } from '../packages/shared/src';
 import { imageType, sanitizeImage } from '../apps/web/src/lib/images';
 import sharp from 'sharp';
 import { sign, verify, webhookValid, boundedBody } from '../apps/web/src/lib/security';
@@ -51,9 +51,17 @@ describe('submission contracts and privacy', () => {
   it('normalizes exact origins and limits local development', () => {
     expect(normalizeOrigin('https://APP.example.com')).toBe('https://app.example.com');
     expect(normalizeOrigin('http://localhost:3000', true)).toBe('http://localhost:3000');
-    expect(() => normalizeOrigin('http://localhost:3000')).toThrow();
-    expect(() => normalizeOrigin('https://app.example.com/path')).toThrow();
+    expect(() => normalizeOrigin('http://localhost:3000')).toThrow(/localhost in development/);
+    expect(() => normalizeOrigin('https://app.example.com/path')).toThrow(/without a path/);
     expect(() => normalizeOrigin('https://user:password@app.example.com')).toThrow();
+    expect(() => normalizeOrigin('not-a-url')).toThrow(/origin/);
+  });
+  it('formats labels safely without throwing on null or empty', () => {
+    expect(label('in_progress')).toBe('In Progress');
+    expect(label('report.updated')).toBe('Report.Updated');
+    expect(label('')).toBe('');
+    expect(label(null)).toBe('');
+    expect(label(undefined)).toBe('');
   });
   it('rejects honeypot submissions', () =>
     expect(

@@ -46,7 +46,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
   return (
     <>
       <Link href="/dashboard/reports" className="back-link">
-        All reports
+        ← All reports
       </Link>
       <PageHeading
         eyebrow={`${r.reference} · ${r.projects.name}`}
@@ -121,7 +121,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
                 <span className="event-mark" />
                 <div>
                   <strong>{label(e.kind.replaceAll('.', ' '))}</strong>
-                  {e.kind === 'report.updated' && (
+                  {e.kind === 'report.updated' && e.details?.before && e.details?.after && (
                     <p className="small muted">
                       {label(e.details.before.status)} → {label(e.details.after.status)} ·{' '}
                       {label(e.details.after.priority)} priority ·{' '}
@@ -166,7 +166,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
                   <option value="">Unassigned</option>
                   {members.data?.map((m: any) => (
                     <option key={m.user_id} value={m.user_id}>
-                      {m.profiles.display_name || m.user_id.slice(0, 8)}
+                      {m.profiles?.display_name || m.user_id.slice(0, 8)}
                     </option>
                   ))}
                 </select>

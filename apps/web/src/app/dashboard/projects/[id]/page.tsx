@@ -19,7 +19,7 @@ export default async function ProjectSettings({ params }: { params: Promise<{ id
   return (
     <>
       <Link href="/dashboard/projects" className="back-link">
-        All projects
+        ← All projects
       </Link>
       <PageHeading title={p.name} description="Everything your widget needs to feel at home." />
       <section className="panel settings-panel">
@@ -32,6 +32,12 @@ export default async function ProjectSettings({ params }: { params: Promise<{ id
         <CopyCode
           code={`<script src="${appUrl()}/widget.js"\n  data-project-key="${p.public_key}" async></script>`}
         />
+        <div style={{ marginTop: '16px' }}>
+          <p className="field-hint" style={{ fontWeight: 600, color: 'var(--ink)' }}>
+            Project Public Key
+          </p>
+          <CopyCode code={p.public_key} />
+        </div>
         <div className="inline-actions">
           <Link href={`/demo?key=${p.public_key}`} className="button button-outline">
             Open widget test page
