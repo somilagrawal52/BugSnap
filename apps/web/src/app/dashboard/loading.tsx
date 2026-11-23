@@ -1,1 +1,13 @@
-export default function Loading(){return <div aria-busy="true" aria-label="Loading workspace"><div className="skeleton" style={{width:240,height:36}}/><div className="metric-grid">{[1,2,3,4].map(i=><div key={i} className="skeleton" style={{height:140}}/>)}</div><div className="skeleton" style={{height:300}}/></div>;}
+export default function Loading() {
+  return (
+    <div aria-busy="true" aria-label="Loading workspace">
+      <div className="skeleton" style={{ width: 240, height: 36 }} />
+      <div className="metric-grid">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="skeleton" style={{ height: 140 }} />
+        ))}
+      </div>
+      <div className="skeleton" style={{ height: 300 }} />
+    </div>
+  );
+}

@@ -142,10 +142,13 @@ declare v_org uuid; begin
 end $$;
 
 create function public.save_project(p_org uuid,p_name text,p_slug text,p_environment text,p_origin text,p_id uuid default null,p_enabled boolean default true,p_label text default 'Report a bug',p_accent text default '#6554e8',p_position text default 'bottom-right',p_version text default null,p_rotate boolean default false) returns uuid language plpgsql security definer set search_path=public as $$
-declare v_id uuid; v_plan text; v_limit integer; begin
+declare v_id uuid; v_plan text; v_limit integer; v_origin text; begin
  if not public.is_admin(p_org) then raise exception 'Administrator required'; end if;
  select plan into v_plan from organizations where id=p_org for update;
- if p_origin !~ '^https://[a-zA-Z0-9.-]+(:[0-9]+)?$' and not (p_environment='development' and p_origin ~ '^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$') then raise exception 'Use an HTTPS origin (localhost only in development)'; end if;
+ if length(p_origin)>3000 or cardinality(string_to_array(p_origin,E'\n')) not between 1 and 10 then raise exception 'Provide 1 to 10 authorized origins'; end if;
+ foreach v_origin in array string_to_array(p_origin,E'\n') loop
+ if v_origin !~ '^https://[a-zA-Z0-9.-]+(:[0-9]+)?$' and not (p_environment='development' and v_origin ~ '^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$') then raise exception 'Use an HTTPS origin (localhost only in development)'; end if;
+ end loop;
  if p_id is null then
  v_limit:=case v_plan when 'free' then 1 when 'starter' then 3 else 10 end;
  if (select count(*) from projects where organization_id=p_org)>=v_limit then raise exception 'Project limit reached'; end if;
@@ -155,7 +158,9 @@ declare v_id uuid; v_plan text; v_limit integer; begin
  if v_id is null then raise exception 'Project unavailable'; end if;
  end if;
  delete from project_domains where project_id=v_id;
- insert into project_domains(organization_id,project_id,origin) values(p_org,v_id,p_origin);
+ foreach v_origin in array string_to_array(p_origin,E'\n') loop
+ insert into project_domains(organization_id,project_id,origin) values(p_org,v_id,v_origin);
+ end loop;
  insert into widget_settings(project_id,organization_id,label,accent,position,app_version) values(v_id,p_org,p_label,p_accent,p_position,nullif(p_version,'')) on conflict(project_id) do update set label=excluded.label,accent=excluded.accent,position=excluded.position,app_version=excluded.app_version;
  insert into audit_logs(organization_id,actor_id,action,details) values(p_org,auth.uid(),'project.saved',jsonb_build_object('project_id',v_id));
  return v_id;

@@ -16,9 +16,10 @@
     "@electric-sql/pglite": "latest",
     "@playwright/test": "latest",
     "@types/node": "latest",
-    "eslint": "9.39.1",
+    "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "jsdom": "latest",
+    "prettier": "^3.10.1",
     "tsx": "latest",
     "typescript": "5.9.3",
     "vitest": "latest"

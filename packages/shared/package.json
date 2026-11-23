@@ -1,1 +1,12 @@
-{"name":"@bugsnap/shared","version":"0.1.0","private":true,"exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"zod":"latest"}}
+{
+  "name": "@bugsnap/shared",
+  "version": "0.1.0",
+  "private": true,
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "latest"
+  }
+}

@@ -1,1 +1,39 @@
-{"name":"@bugsnap/web","private":true,"scripts":{"dev":"next dev --hostname 0.0.0.0","build":"next build","start":"next start --hostname 0.0.0.0","typecheck":"tsc --noEmit"},"dependencies":{"@bugsnap/shared":"workspace:*","@bugsnap/ui":"workspace:*","@hookform/resolvers":"latest","@octokit/auth-app":"latest","@octokit/rest":"latest","@supabase/ssr":"latest","@supabase/supabase-js":"latest","@tanstack/react-table":"latest","class-variance-authority":"latest","clsx":"latest","lucide-react":"latest","next":"16.4.6","radix-ui":"latest","react":"19.3.1","react-dom":"19.3.1","react-hook-form":"latest","recharts":"latest","server-only":"latest","sharp":"latest","tailwind-merge":"latest","zod":"latest"},"devDependencies":{"@tailwindcss/postcss":"latest","@types/react":"latest","@types/react-dom":"latest","tailwindcss":"latest"}}
+{
+  "name": "@bugsnap/web",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bugsnap/shared": "workspace:*",
+    "@bugsnap/ui": "workspace:*",
+    "@hookform/resolvers": "latest",
+    "@octokit/auth-app": "latest",
+    "@octokit/rest": "latest",
+    "@supabase/ssr": "latest",
+    "@supabase/supabase-js": "latest",
+    "@tanstack/react-table": "8.21.3",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
+    "next": "16.4.6",
+    "radix-ui": "latest",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "latest",
+    "recharts": "latest",
+    "server-only": "latest",
+    "sharp": "latest",
+    "tailwind-merge": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "tailwindcss": "latest"
+  }
+}

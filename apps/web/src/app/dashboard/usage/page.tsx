@@ -1,5 +1,67 @@
-import {plans} from '@bugsnap/shared';
-import {workspace,assertResult} from '@/lib/workspace';
-import {PageHeading} from '@/components/page-heading';
-import {Badge} from '@bugsnap/ui';
-export default async function Usage(){const {db,org}=await workspace();const month=new Date().toISOString().slice(0,7)+'-01';const [usage,projects]=await Promise.all([db.from('usage_daily').select('reports').eq('organization_id',org.id).gte('day',month),db.from('projects').select('id',{count:'exact',head:true}).eq('organization_id',org.id)]);[usage,projects].forEach(assertResult);const used=usage.data?.reduce((s,d)=>s+d.reports,0)||0;const plan=plans[org.plan];return <><PageHeading title="Room to keep building." description="Transparent limits, with no surprises. Monthly usage resets on the first day of each UTC month."/><section className="panel settings-panel"><div className="section-title"><h2>Your plan</h2><Badge>{org.plan.toUpperCase()} · BETA</Badge></div>{[{name:'Reports this month',used,max:plan.reports},{name:'Projects',used:projects.count||0,max:plan.projects}].map(v=><div className="usage-item" key={v.name}><div><strong>{v.name}</strong><span>{v.used.toLocaleString()} / {v.max.toLocaleString()}</span></div><progress value={v.used} max={v.max}/>{v.used>=v.max&&<p className="notice error">Limit reached. New {v.name.startsWith('Reports')?'reports can be submitted when the monthly allowance resets.':'projects cannot be created on this plan.'}</p>}</div>)}<p className="notice">Beta accounts use the Free plan. Starter and Team entitlements are implemented for future billing. Paid checkout is not available.</p></section><div className="plan-grid">{Object.entries(plans).map(([name,p])=><article className="panel plan-option" key={name}><h2>{name[0].toUpperCase()+name.slice(1)}</h2><p>{p.projects} {p.projects===1?'project':'projects'}</p><p>{p.reports.toLocaleString()} reports / month</p><Badge>{name===org.plan?'Current plan':'Planned · no checkout'}</Badge></article>)}</div></>;}
+import { plans } from '@bugsnap/shared';
+import { workspace, assertResult } from '@/lib/workspace';
+import { PageHeading } from '@/components/page-heading';
+import { Badge } from '@bugsnap/ui';
+export default async function Usage() {
+  const { db, org } = await workspace();
+  const month = new Date().toISOString().slice(0, 7) + '-01';
+  const [usage, projects] = await Promise.all([
+    db.from('usage_daily').select('reports').eq('organization_id', org.id).gte('day', month),
+    db.from('projects').select('id', { count: 'exact', head: true }).eq('organization_id', org.id),
+  ]);
+  [usage, projects].forEach(assertResult);
+  const used = usage.data?.reduce((s, d) => s + d.reports, 0) || 0;
+  const plan = plans[org.plan];
+  return (
+    <>
+      <PageHeading
+        title="Room to keep building."
+        description="Transparent limits, with no surprises. Monthly usage resets on the first day of each UTC month."
+      />
+      <section className="panel settings-panel">
+        <div className="section-title">
+          <h2>Your plan</h2>
+          <Badge>{org.plan.toUpperCase()} · BETA</Badge>
+        </div>
+        {[
+          { name: 'Reports this month', used, max: plan.reports },
+          { name: 'Projects', used: projects.count || 0, max: plan.projects },
+        ].map((v) => (
+          <div className="usage-item" key={v.name}>
+            <div>
+              <strong>{v.name}</strong>
+              <span>
+                {v.used.toLocaleString()} / {v.max.toLocaleString()}
+              </span>
+            </div>
+            <progress value={v.used} max={v.max} />
+            {v.used >= v.max && (
+              <p className="notice error">
+                Limit reached. New{' '}
+                {v.name.startsWith('Reports')
+                  ? 'reports can be submitted when the monthly allowance resets.'
+                  : 'projects cannot be created on this plan.'}
+              </p>
+            )}
+          </div>
+        ))}
+        <p className="notice">
+          Beta accounts use the Free plan. Starter and Team entitlements are implemented for future
+          billing. Paid checkout is not available.
+        </p>
+      </section>
+      <div className="plan-grid">
+        {Object.entries(plans).map(([name, p]) => (
+          <article className="panel plan-option" key={name}>
+            <h2>{name[0].toUpperCase() + name.slice(1)}</h2>
+            <p>
+              {p.projects} {p.projects === 1 ? 'project' : 'projects'}
+            </p>
+            <p>{p.reports.toLocaleString()} reports / month</p>
+            <Badge>{name === org.plan ? 'Current plan' : 'Planned · no checkout'}</Badge>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}

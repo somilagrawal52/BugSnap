@@ -1,3 +1,39 @@
 import Link from 'next/link';
-import {Brand} from '@/components/brand';
-export default function Setup(){return <main className="prose-page"><Brand/><p className="eyebrow">DEVELOPER SETUP</p><h1>Connect your BugSnap backend.</h1><p>The application needs a Supabase project before accounts, workspaces and reports can be stored.</p><ol><li>Create a Supabase project or run the local Supabase CLI with Docker.</li><li>Apply both SQL files in <code>supabase/migrations</code> in order.</li><li>Copy <code>.env.example</code> to <code>apps/web/.env.local</code>. Set the app URL, Supabase URL, anon key, service role key, and a random submission secret.</li><li>Configure Supabase Auth redirect URLs for <code>/auth/callback</code>. Restart the server.</li><li><Link href="/signup">Create your account</Link>, verify your email, and create a workspace.</li></ol><p>GitHub is optional for report collection. Add the GitHub App credentials when you’re ready to export issues.</p><Link className="button button-outline" href="/docs">Read the setup and deployment guide</Link></main>;}
+import { Brand } from '@/components/brand';
+export default function Setup() {
+  return (
+    <main className="prose-page">
+      <Brand />
+      <p className="eyebrow">DEVELOPER SETUP</p>
+      <h1>Connect your BugSnap backend.</h1>
+      <p>
+        The application needs a Supabase project before accounts, workspaces and reports can be
+        stored.
+      </p>
+      <ol>
+        <li>Create a Supabase project or run the local Supabase CLI with Docker.</li>
+        <li>
+          Apply both SQL files in <code>supabase/migrations</code> in order.
+        </li>
+        <li>
+          Copy <code>.env.example</code> to <code>apps/web/.env.local</code>. Set the app URL,
+          Supabase URL, anon key, service role key, and a random submission secret.
+        </li>
+        <li>
+          Configure Supabase Auth redirect URLs for <code>/auth/callback</code>. Restart the server.
+        </li>
+        <li>
+          <Link href="/signup">Create your account</Link>, verify your email, and create a
+          workspace.
+        </li>
+      </ol>
+      <p>
+        GitHub is optional for report collection. Add the GitHub App credentials when you’re ready
+        to export issues.
+      </p>
+      <Link className="button button-outline" href="/docs">
+        Read the setup and deployment guide
+      </Link>
+    </main>
+  );
+}

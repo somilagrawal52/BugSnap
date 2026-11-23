@@ -1,9 +1,221 @@
-import {notFound} from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import {statuses,priorities,label} from '@bugsnap/shared';
-import {workspace,assertResult} from '@/lib/workspace';
-import {updateReport,addComment} from '@/app/actions';
-import {ActionForm} from '@/components/action-form';
-import {PageHeading} from '@/components/page-heading';
-import {ExportButton} from '@/components/export-button';
-export default async function ReportDetail({params}:{params:Promise<{id:string}>}) {const {id}=await params;const {db,org}=await workspace();const report=await db.from('reports').select('*,projects(name)').eq('id',id).eq('organization_id',org.id).single();if(!report.data)notFound();const r=report.data;const [attachments,comments,events,members,repos,exports]=await Promise.all([db.from('report_attachments').select('*').eq('report_id',id),db.from('report_comments').select('*,profiles:author_id(display_name)').eq('report_id',id).order('created_at'),db.from('report_events').select('*').eq('report_id',id).order('created_at',{ascending:false}),db.from('organization_members').select('user_id,profiles(display_name)').eq('organization_id',org.id),db.from('github_repositories').select('*').eq('organization_id',org.id).eq('selected',true).eq('enabled',true),db.from('github_exports').select('*,github_repositories(full_name)').eq('report_id',id)]);[attachments,comments,events,members,repos,exports].forEach(assertResult);return <><Link href="/dashboard/reports" className="back-link">All reports</Link><PageHeading eyebrow={`${r.reference} · ${r.projects.name}`} title={r.title} description={`Submitted ${new Date(r.created_at).toLocaleString('en',{timeZone:'UTC'})} UTC`}/><div className="detail-grid"><div className="detail-main"><section className="panel detail-panel"><h2>Description</h2><p className="preserve-lines">{r.description}</p>{[['Steps to reproduce',r.steps],['Expected behavior',r.expected],['Actual behavior',r.actual]].map(([title,value])=>value&&<div key={title}><h3>{title}</h3><p className="preserve-lines">{value}</p></div>)}{attachments.data?.map(a=><div key={a.id}><h3>Screenshot</h3><a href={`/api/attachments/${a.id}`} target="_blank" rel="noreferrer"><img className="report-screenshot" src={`/api/attachments/${a.id}`} alt="Reporter-provided screenshot"/></a></div>)}</section><section className="panel detail-panel"><h2>Internal discussion</h2><p className="muted small">Only members of this workspace can see these comments.</p>{comments.data?.length?comments.data.map((c:any)=><article className="comment" key={c.id}><strong>{c.profiles?.display_name||'Teammate'}</strong><time>{new Date(c.created_at).toLocaleString('en',{timeZone:'UTC'})} UTC</time><p className="preserve-lines">{c.body}</p></article>):<p className="muted">Start the conversation. Add context for your team.</p>}<ActionForm action={addComment.bind(null,id)} submit="Add comment"><label className="sr-only" htmlFor="comment">Comment</label><textarea className="input textarea" id="comment" name="body" placeholder="Leave an internal comment…" required maxLength={5000}/></ActionForm></section><section className="panel detail-panel"><h2>Activity history</h2>{events.data?.map(e=><div className="event" key={e.id}><span className="event-mark"/><div><strong>{label(e.kind.replaceAll('.',' '))}</strong>{e.kind==='report.updated'&&<p className="small muted">{label(e.details.before.status)} → {label(e.details.after.status)} · {label(e.details.after.priority)} priority · {e.details.after.assignee?'Assigned':'Unassigned'}</p>}<time>{new Date(e.created_at).toLocaleString('en',{timeZone:'UTC'})} UTC</time></div></div>)}</section></div><aside className="detail-aside"><section className="panel detail-panel"><h2>Triage</h2><ActionForm action={updateReport.bind(null,id)} submit="Update report"><label>Status<select name="status" defaultValue={r.status}>{statuses.map(v=><option key={v} value={v}>{label(v)}</option>)}</select></label><label>Priority<select name="priority" defaultValue={r.priority}>{priorities.map(v=><option key={v} value={v}>{label(v)}</option>)}</select></label><label>Assignee<select name="assignee" defaultValue={r.assignee_id||''}><option value="">Unassigned</option>{members.data?.map((m:any)=><option key={m.user_id} value={m.user_id}>{m.profiles.display_name||m.user_id.slice(0,8)}</option>)}</select></label></ActionForm></section><section className="panel detail-panel"><h2>Technical context</h2><dl className="context-list">{Object.entries({Page:r.context.origin+r.context.pathname,Browser:r.context.browser,OS:r.context.os,Viewport:`${r.context.viewport?.width} × ${r.context.viewport?.height}`,Environment:r.context.environment,Version:r.context.appVersion||'Not supplied',Contact:r.reporter_email||'Not supplied'}).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{String(value)}</dd></div>)}</dl></section><section className="panel detail-panel"><h2>GitHub issue</h2><p className="muted small">Screenshots stay private. Issues include a link to this report that requires BugSnap workspace access.</p><ExportButton reportId={id} repositories={repos.data||[]}/>{exports.data?.map((e:any)=><div className="export-record" key={e.id}><strong>{e.github_repositories.full_name}</strong><p>{label(e.status)}</p>{e.issue_url&&<a href={e.issue_url} target="_blank" rel="noreferrer">View issue #{e.issue_number}</a>}{e.last_error&&<p className="small muted">{e.last_error}</p>}</div>)}{!repos.data?.length&&<Link href="/dashboard/integrations">Connect a repository</Link>}</section></aside></div></>;}
+import { statuses, priorities, label } from '@bugsnap/shared';
+import { workspace, assertResult } from '@/lib/workspace';
+import { updateReport, addComment } from '@/app/actions';
+import { ActionForm } from '@/components/action-form';
+import { PageHeading } from '@/components/page-heading';
+import { ExportButton } from '@/components/export-button';
+export default async function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { db, org } = await workspace();
+  const report = await db
+    .from('reports')
+    .select('*,projects(name)')
+    .eq('id', id)
+    .eq('organization_id', org.id)
+    .single();
+  if (!report.data) notFound();
+  const r = report.data;
+  const [attachments, comments, events, members, repos, exports] = await Promise.all([
+    db.from('report_attachments').select('*').eq('report_id', id),
+    db
+      .from('report_comments')
+      .select('*,profiles:author_id(display_name)')
+      .eq('report_id', id)
+      .order('created_at'),
+    db
+      .from('report_events')
+      .select('*')
+      .eq('report_id', id)
+      .order('created_at', { ascending: false }),
+    db
+      .from('organization_members')
+      .select('user_id,profiles(display_name)')
+      .eq('organization_id', org.id),
+    db
+      .from('github_repositories')
+      .select('*')
+      .eq('organization_id', org.id)
+      .eq('selected', true)
+      .eq('enabled', true),
+    db.from('github_exports').select('*,github_repositories(full_name)').eq('report_id', id),
+  ]);
+  [attachments, comments, events, members, repos, exports].forEach(assertResult);
+  return (
+    <>
+      <Link href="/dashboard/reports" className="back-link">
+        All reports
+      </Link>
+      <PageHeading
+        eyebrow={`${r.reference} · ${r.projects.name}`}
+        title={r.title}
+        description={`Submitted ${new Date(r.created_at).toLocaleString('en', { timeZone: 'UTC' })} UTC`}
+      />
+      <div className="detail-grid">
+        <div className="detail-main">
+          <section className="panel detail-panel">
+            <h2>Description</h2>
+            <p className="preserve-lines">{r.description}</p>
+            {[
+              ['Steps to reproduce', r.steps],
+              ['Expected behavior', r.expected],
+              ['Actual behavior', r.actual],
+            ].map(
+              ([title, value]) =>
+                value && (
+                  <div key={title}>
+                    <h3>{title}</h3>
+                    <p className="preserve-lines">{value}</p>
+                  </div>
+                ),
+            )}
+            {attachments.data?.map((a) => (
+              <div key={a.id}>
+                <h3>Screenshot</h3>
+                <a href={`/api/attachments/${a.id}`} target="_blank" rel="noreferrer">
+                  <img
+                    className="report-screenshot"
+                    src={`/api/attachments/${a.id}`}
+                    alt="Reporter-provided screenshot"
+                  />
+                </a>
+              </div>
+            ))}
+          </section>
+          <section className="panel detail-panel">
+            <h2>Internal discussion</h2>
+            <p className="muted small">Only members of this workspace can see these comments.</p>
+            {comments.data?.length ? (
+              comments.data.map((c: any) => (
+                <article className="comment" key={c.id}>
+                  <strong>{c.profiles?.display_name || 'Teammate'}</strong>
+                  <time>
+                    {new Date(c.created_at).toLocaleString('en', { timeZone: 'UTC' })} UTC
+                  </time>
+                  <p className="preserve-lines">{c.body}</p>
+                </article>
+              ))
+            ) : (
+              <p className="muted">Start the conversation. Add context for your team.</p>
+            )}
+            <ActionForm action={addComment.bind(null, id)} submit="Add comment">
+              <label className="sr-only" htmlFor="comment">
+                Comment
+              </label>
+              <textarea
+                className="input textarea"
+                id="comment"
+                name="body"
+                placeholder="Leave an internal comment…"
+                required
+                maxLength={5000}
+              />
+            </ActionForm>
+          </section>
+          <section className="panel detail-panel">
+            <h2>Activity history</h2>
+            {events.data?.map((e) => (
+              <div className="event" key={e.id}>
+                <span className="event-mark" />
+                <div>
+                  <strong>{label(e.kind.replaceAll('.', ' '))}</strong>
+                  {e.kind === 'report.updated' && (
+                    <p className="small muted">
+                      {label(e.details.before.status)} → {label(e.details.after.status)} ·{' '}
+                      {label(e.details.after.priority)} priority ·{' '}
+                      {e.details.after.assignee ? 'Assigned' : 'Unassigned'}
+                    </p>
+                  )}
+                  <time>
+                    {new Date(e.created_at).toLocaleString('en', { timeZone: 'UTC' })} UTC
+                  </time>
+                </div>
+              </div>
+            ))}
+          </section>
+        </div>
+        <aside className="detail-aside">
+          <section className="panel detail-panel">
+            <h2>Triage</h2>
+            <ActionForm action={updateReport.bind(null, id)} submit="Update report">
+              <label>
+                Status
+                <select name="status" defaultValue={r.status}>
+                  {statuses.map((v) => (
+                    <option key={v} value={v}>
+                      {label(v)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Priority
+                <select name="priority" defaultValue={r.priority}>
+                  {priorities.map((v) => (
+                    <option key={v} value={v}>
+                      {label(v)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Assignee
+                <select name="assignee" defaultValue={r.assignee_id || ''}>
+                  <option value="">Unassigned</option>
+                  {members.data?.map((m: any) => (
+                    <option key={m.user_id} value={m.user_id}>
+                      {m.profiles.display_name || m.user_id.slice(0, 8)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </ActionForm>
+          </section>
+          <section className="panel detail-panel">
+            <h2>Technical context</h2>
+            <dl className="context-list">
+              {Object.entries({
+                Page: r.context.origin + r.context.pathname,
+                Browser: r.context.browser,
+                OS: r.context.os,
+                Viewport: `${r.context.viewport?.width} × ${r.context.viewport?.height}`,
+                Environment: r.context.environment,
+                Version: r.context.appVersion || 'Not supplied',
+                Contact: r.reporter_email || 'Not supplied',
+              }).map(([key, value]) => (
+                <div key={key}>
+                  <dt>{key}</dt>
+                  <dd>{String(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+          <section className="panel detail-panel">
+            <h2>GitHub issue</h2>
+            <p className="muted small">
+              Screenshots stay private. Issues include a link to this report that requires BugSnap
+              workspace access.
+            </p>
+            <ExportButton reportId={id} repositories={repos.data || []} />
+            {exports.data?.map((e: any) => (
+              <div className="export-record" key={e.id}>
+                <strong>{e.github_repositories.full_name}</strong>
+                <p>{label(e.status)}</p>
+                {e.issue_url && (
+                  <a href={e.issue_url} target="_blank" rel="noreferrer">
+                    View issue #{e.issue_number}
+                  </a>
+                )}
+                {e.last_error && <p className="small muted">{e.last_error}</p>}
+              </div>
+            ))}
+            {!repos.data?.length && (
+              <Link href="/dashboard/integrations">Connect a repository</Link>
+            )}
+          </section>
+        </aside>
+      </div>
+    </>
+  );
+}
