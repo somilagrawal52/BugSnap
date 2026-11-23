@@ -1,0 +1,33 @@
+{
+  "name": "bugsnap",
+  "private": true,
+  "packageManager": "pnpm@10.34.7",
+  "scripts": {
+    "dev": "pnpm --filter @bugsnap/widget build && pnpm --filter @bugsnap/web dev",
+    "build": "pnpm --filter @bugsnap/widget build && pnpm --filter @bugsnap/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "seed": "tsx scripts/seed.ts",
+    "cleanup": "tsx scripts/cleanup.ts"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "latest",
+    "@playwright/test": "latest",
+    "@types/node": "latest",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.4.6",
+    "jsdom": "latest",
+    "tsx": "latest",
+    "typescript": "5.9.3",
+    "vitest": "latest"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "@swc/core"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"name":"@bugsnap/widget","version":"0.1.0","private":true,"scripts":{"build":"vite build && node measure.mjs","typecheck":"tsc --noEmit"},"devDependencies":{"vite":"8.3.8"}}

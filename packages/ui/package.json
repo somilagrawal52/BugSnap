@@ -1,0 +1,1 @@
+{"name":"@bugsnap/ui","version":"0.1.0","private":true,"exports":"./src/index.tsx","scripts":{"typecheck":"tsc --noEmit"},"dependencies":{"class-variance-authority":"latest","clsx":"latest","tailwind-merge":"latest","radix-ui":"latest","react":"19.3.1"},"devDependencies":{"@types/react":"latest"}}
