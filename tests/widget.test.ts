@@ -5,17 +5,15 @@ beforeEach(() => {
   window.BugSnap?.destroy();
   vi.stubGlobal(
     'fetch',
-    vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          token: 'signed',
-          label: 'Report a bug',
-          position: 'bottom-right',
-          accent: '#6554e8',
-        }),
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        token: 'signed',
+        label: 'Report a bug',
+        position: 'bottom-right',
+        accent: '#6554e8',
       }),
+    }),
   );
 });
 afterEach(() => {

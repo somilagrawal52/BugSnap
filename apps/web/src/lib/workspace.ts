@@ -13,6 +13,7 @@ export async function workspace() {
     .from('organization_members')
     .select('organization_id,role,organizations(id,name,plan)')
     .eq('user_id', user.id)
+    .eq('active', true)
     .order('created_at');
   if (result.error) throw new Error('Workspace unavailable. Check the database migrations.');
   if (!result.data?.length) redirect('/onboarding');

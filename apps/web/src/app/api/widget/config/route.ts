@@ -3,6 +3,24 @@ import { z } from 'zod';
 import { adminClient } from '@/lib/supabase/server';
 import { sign, rateKey } from '@/lib/security';
 export async function GET(request: Request) {
+  const input = new URL(request.url);
+  if (
+    !z
+      .string()
+      .regex(/^bs_[a-f0-9]{32}$/)
+      .safeParse(input.searchParams.get('key')).success
+  )
+    return NextResponse.json({ error: 'Invalid project key' }, { status: 400 });
+  try {
+    const origin = new URL(input.searchParams.get('origin') || '');
+    if (
+      !['https:', 'http:'].includes(origin.protocol) ||
+      origin.origin !== input.searchParams.get('origin')
+    )
+      throw new Error();
+  } catch {
+    return NextResponse.json({ error: 'Invalid origin' }, { status: 400 });
+  }
   try {
     const url = new URL(request.url);
     const key = z

@@ -200,9 +200,9 @@ export default function Documentation() {
           </table>
           <p>
             Invitations produce a shareable link rather than sending email. The recipient must sign
-            in with the verified invited email. Links expire after seven days. Member removal may be
-            restricted when historical authored records reference the membership; ownership transfer
-            and archival are operator-assisted during beta.
+            in with the verified invited email. Links expire after seven days. Member removal
+            revokes workspace access while preserving historical comments and events. Ownership
+            transfer and workspace deletion are operator-assisted during beta.
           </p>
           <h2 id="limits">Usage quotas</h2>
           <p>

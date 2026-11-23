@@ -319,6 +319,8 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
                 </>
               )}
               <br />
+              The project’s configured environment is also attached.
+              <br />
               No query strings, cookies, passwords, or form values are captured.
             </p>
           ) : (

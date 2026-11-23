@@ -3,9 +3,10 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { required } from '../env';
+import type { AppDatabase } from '@bugsnap/shared';
 export async function sessionClient() {
   const jar = await cookies();
-  return createServerClient(
+  return createServerClient<AppDatabase>(
     required('NEXT_PUBLIC_SUPABASE_URL'),
     required('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
     {
@@ -23,7 +24,11 @@ export async function sessionClient() {
   );
 }
 export function adminClient() {
-  return createClient(required('NEXT_PUBLIC_SUPABASE_URL'), required('SUPABASE_SERVICE_ROLE_KEY'), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return createClient<AppDatabase>(
+    required('NEXT_PUBLIC_SUPABASE_URL'),
+    required('SUPABASE_SERVICE_ROLE_KEY'),
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
 }

@@ -48,7 +48,11 @@ export default async function ProjectSettings({ params }: { params: Promise<{ id
         {role === 'member' ? (
           <p>Ask an owner or admin to update this project.</p>
         ) : (
-          <ProjectForm project={p} domain={p.project_domains.map((d:{origin:string})=>d.origin).join('\n')} settings={settings} />
+          <ProjectForm
+            project={p}
+            domain={p.project_domains.map((d: { origin: string }) => d.origin).join('\n')}
+            settings={settings}
+          />
         )}
       </section>
     </>

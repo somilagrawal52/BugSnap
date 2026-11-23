@@ -59,7 +59,8 @@ export function ProjectForm({
             placeholder="https://app.example.com"
           />
           <span className="field-hint">
-            One exact scheme + hostname + port per line (up to 10). Localhost is allowed in development.
+            One exact scheme + hostname + port per line (up to 10). Localhost is allowed in
+            development.
           </span>
         </label>
       </div>

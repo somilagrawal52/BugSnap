@@ -24,9 +24,14 @@ export default async function Overview() {
       .eq('organization_id', org.id)
       .order('created_at', { ascending: false })
       .limit(6),
-    db.from('projects').select('*').eq('organization_id', org.id).order('created_at').limit(3),
+    db
+      .from('projects')
+      .select('*,reports(count)')
+      .eq('organization_id', org.id)
+      .order('created_at'),
   ]);
   [metrics, recent, projects].forEach(assertResult);
+  if (!metrics.data) throw new Error('Metrics unavailable');
   const m = metrics.data;
   const cards = [
     {
@@ -165,6 +170,8 @@ export default async function Overview() {
               <h3>{p.name}</h3>
               <p>
                 {p.environment} <span>·</span> {p.enabled ? 'Widget enabled' : 'Widget paused'}
+                <span>·</span>
+                {p.reports[0]?.count || 0} reports
               </p>
             </div>
             <ChevronRight size={17} />

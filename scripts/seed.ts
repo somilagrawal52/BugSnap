@@ -1,6 +1,6 @@
 import { loadEnvFile } from 'node:process';
 import { existsSync } from 'node:fs';
-import { createClient } from '../apps/web/node_modules/@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 if (existsSync('apps/web/.env.local')) loadEnvFile('apps/web/.env.local');
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!,
   anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -71,6 +71,7 @@ const bugs = [
     'critical',
   ],
 ];
+const appOrigin = new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').origin;
 for (const [index, name] of ['Acme Dashboard', 'Acme Checkout'].entries()) {
   const slug = index ? 'acme-checkout' : 'acme-dashboard';
   const found = await user
@@ -80,13 +81,14 @@ for (const [index, name] of ['Acme Dashboard', 'Acme Checkout'].entries()) {
     .eq('slug', slug)
     .maybeSingle();
   let id = found.data?.id;
-  if (!id) {
+  {
     const result = await user.rpc('save_project', {
       p_org: org,
       p_name: name,
       p_slug: slug,
       p_environment: 'development',
-      p_origin: 'http://localhost:3000',
+      p_origin: appOrigin + '\nhttp://localhost:3001',
+      p_id: id || null,
     });
     if (result.error) throw result.error;
     id = result.data;
@@ -105,7 +107,7 @@ for (const [index, name] of ['Acme Dashboard', 'Acme Checkout'].entries()) {
         expected: 'The application completes the action.',
         actual: description,
         context: {
-          origin: 'http://localhost:3000',
+          origin: appOrigin,
           pathname: index ? '/checkout' : '/dashboard',
           browser: i === 2 ? 'Safari 18' : 'Chrome 132',
           os: 'macOS',

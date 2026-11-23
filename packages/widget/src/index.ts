@@ -28,7 +28,15 @@ let closeWidget = () => {};
 let generation = 0;
 export function collectContext() {
   const ua = navigator.userAgent;
-  const browser = ua.match(/(Edg|Firefox|Chrome|Version)\/([\d.]+)/);
+  const agents: [string, RegExp][] = [
+    ['Edge', /Edg(?:A|iOS)?\/([\d.]+)/],
+    ['Opera', /OPR\/([\d.]+)/],
+    ['Firefox', /(?:Firefox|FxiOS)\/([\d.]+)/],
+    ['Chrome', /(?:Chrome|CriOS)\/([\d.]+)/],
+    ['Safari', /Version\/([\d.]+)/],
+  ];
+  const agent = agents.find(([, pattern]) => pattern.test(ua));
+  const browser = agent ? `${agent[0]} ${ua.match(agent[1])![1]}` : 'Unknown';
   const os = /Windows/.test(ua)
     ? 'Windows'
     : /Android/.test(ua)
@@ -43,9 +51,7 @@ export function collectContext() {
   return {
     origin: location.origin,
     pathname: location.pathname,
-    browser: browser
-      ? `${browser[1] === 'Version' ? 'Safari' : browser[1]} ${browser[2]}`
-      : 'Unknown',
+    browser,
     os,
     viewport: { width: innerWidth, height: innerHeight },
     timestamp: new Date().toISOString(),
@@ -127,8 +133,17 @@ export async function init(config: Config) {
       send();
       frame.focus();
       if (Date.now() - configuredAt > 12 * 60 * 1000) {
-        void fetch(`${appOrigin}/api/widget/config?key=${encodeURIComponent(config.projectKey)}&origin=${encodeURIComponent(location.origin)}`, {credentials:'omit',referrerPolicy:'no-referrer'})
-          .then(async response => {if(response.ok) {remote=await response.json();configuredAt=Date.now();send();}})
+        void fetch(
+          `${appOrigin}/api/widget/config?key=${encodeURIComponent(config.projectKey)}&origin=${encodeURIComponent(location.origin)}`,
+          { credentials: 'omit', referrerPolicy: 'no-referrer' },
+        )
+          .then(async (response) => {
+            if (response.ok) {
+              remote = await response.json();
+              configuredAt = Date.now();
+              send();
+            }
+          })
           .catch(() => {});
       }
     };
@@ -188,7 +203,10 @@ if (typeof window !== 'undefined') {
   const script = document.currentScript as HTMLScriptElement | null;
   if (script?.dataset.projectKey) {
     const start = () =>
-      void init({ projectKey: script.dataset.projectKey!, appOrigin: new URL(script.src).origin });
+      void window.BugSnap!.init({
+        projectKey: script.dataset.projectKey!,
+        appOrigin: new URL(script.src).origin,
+      });
     if (document.body) start();
     else document.addEventListener('DOMContentLoaded', start, { once: true });
   }

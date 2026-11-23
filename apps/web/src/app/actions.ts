@@ -1,6 +1,7 @@
 'use server';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 import { z } from 'zod';
 import { normalizeOrigin, projectSchema, statuses, priorities } from '@bugsnap/shared';
 import { workspace, assertResult } from '@/lib/workspace';
@@ -10,6 +11,9 @@ import { hash } from '@/lib/security';
 export type ActionState = { error?: string; success?: string; redirect?: string; link?: string };
 const field = (f: FormData, k: string) => String(f.get(k) || '');
 function failure(e: unknown): ActionState {
+  unstable_rethrow(e);
+  if (e instanceof z.ZodError)
+    return { error: e.issues[0]?.message || 'Check the form and try again.' };
   const message = e instanceof Error ? e.message : '';
   const allowed = [
     'limit',
@@ -101,6 +105,7 @@ export async function switchWorkspace(form: FormData) {
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
+    .eq('active', true)
     .eq('organization_id', id)
     .single();
   if (!data) throw new Error('Forbidden');
@@ -123,6 +128,7 @@ export async function onboard(_prev: ActionState, form: FormData): Promise<Actio
       p_name: z.string().trim().min(2).max(80).parse(field(form, 'workspace')),
     });
     assertResult(result);
+    if (!result.data) throw new Error('Workspace could not be created or selected.');
     (await cookies()).set('bugsnap_workspace', result.data, {
       httpOnly: true,
       sameSite: 'lax',
@@ -148,7 +154,15 @@ export async function saveProject(
         ),
       ),
     );
-    const origin = [...new Set(input.origin.split(/\r?\n/).map(v=>v.trim()).filter(Boolean).map(v=>normalizeOrigin(v,input.environment==='development')))].join('\n');
+    const origin = [
+      ...new Set(
+        input.origin
+          .split(/\r?\n/)
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .map((v) => normalizeOrigin(v, input.environment === 'development')),
+      ),
+    ].join('\n');
     const result = await db.rpc('save_project', {
       p_org: org.id,
       p_name: input.name,
@@ -254,6 +268,7 @@ export async function acceptInvitation(_prev: ActionState, form: FormData): Prom
     const token = z.string().length(72).parse(field(form, 'token'));
     const result = await db.rpc('accept_invitation', { p_hash: hash(token) });
     assertResult(result);
+    if (!result.data) throw new Error('Workspace could not be created or selected.');
     (await cookies()).set('bugsnap_workspace', result.data, {
       httpOnly: true,
       sameSite: 'lax',

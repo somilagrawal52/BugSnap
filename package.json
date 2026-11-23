@@ -3,26 +3,30 @@
   "private": true,
   "packageManager": "pnpm@10.34.7",
   "scripts": {
-    "dev": "pnpm --filter @bugsnap/widget build && pnpm --filter @bugsnap/web dev",
+    "dev": "node scripts/dev.mjs",
     "build": "pnpm --filter @bugsnap/widget build && pnpm --filter @bugsnap/web build",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && tsc --noEmit -p tsconfig.tools.json",
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "seed": "tsx scripts/seed.ts",
-    "cleanup": "tsx scripts/cleanup.ts"
+    "cleanup": "tsx scripts/cleanup.ts",
+    "check:env": "node scripts/check-env.mjs",
+    "setup:local": "node scripts/local-setup.mjs"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "latest",
-    "@playwright/test": "latest",
-    "@types/node": "latest",
+    "@electric-sql/pglite": "0.5.17",
+    "@playwright/test": "1.65.1",
+    "@supabase/supabase-js": "2.119.2",
+    "@types/node": "26.6.6",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
-    "jsdom": "latest",
-    "prettier": "^3.10.1",
-    "tsx": "latest",
+    "jsdom": "31.0.1",
+    "prettier": "3.10.1",
+    "sharp": "0.35.5",
+    "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "latest"
+    "vitest": "5.1.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -30,5 +34,6 @@
       "sharp",
       "@swc/core"
     ]
-  }
+  },
+  "type": "module"
 }

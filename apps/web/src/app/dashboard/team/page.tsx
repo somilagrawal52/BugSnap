@@ -9,6 +9,7 @@ export default async function Team() {
     .from('organization_members')
     .select('*,profiles(display_name)')
     .eq('organization_id', org.id)
+    .eq('active', true)
     .order('created_at');
   assertResult(result);
   const invitations =
@@ -62,8 +63,8 @@ export default async function Team() {
           <h2>Invite a teammate</h2>
           <p className="muted">
             Create an email-bound link, then share it yourself. BugSnap does not send invitation
-            emails. Removing a member with historical authorship is restricted to preserve the audit
-            trail.
+            emails. Removing a member revokes workspace access while preserving historical comments
+            and events.
           </p>
           <ActionForm action={inviteMember} submit="Create invitation">
             <div className="form-grid">

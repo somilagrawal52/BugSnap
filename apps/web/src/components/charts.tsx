@@ -49,6 +49,7 @@ export function ReportsChart({ data }: { data: { day: string; reports: number }[
             contentStyle={{ borderRadius: 10, borderColor: '#e9e9f0', fontSize: 14 }}
           />
           <Area
+            isAnimationActive={false}
             type="monotone"
             dataKey="reports"
             stroke="#7965ed"

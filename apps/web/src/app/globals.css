@@ -3506,59 +3506,356 @@ progress::-webkit-progress-value {
 }
 
 /* Task-critical text stays legible at normal zoom. Compact metadata is secondary. */
-body {font-size:16px;}
-.nav-link,.sidebar .nav-link,.marketing-nav>nav,.login-link,.button-sm{font-size:14px;}
-.sidebar .nav-link.active{color:#6245c2;background:#efebff;}
-.hero h1>span{color:#7452b1;}
-.marketing-nav .button-primary,.hero-ctas .button-primary,.bottom-cta>.button,.heading-actions .button,.widget-submit,.widget-success .button{background:#6955e8;color:white;}
-.hero-support,.section-intro>p:last-child,.workflow-steps p,.feature-band>div>p:not(.eyebrow),.installation-section>div>p:not(.eyebrow),.faq-section details>p,.feature-card p,.demo-intro>p:last-child{font-size:16px;color:#737083;}
-.hero-description{color:#514a60;}
-.release-pill,.hero-note,.value-strip>span,.value-strip>div,.text-link,.metric-caption,.panel-heading p,.chart-caption,.table-date,.report-reference,.table-project{font-size:12px;}
-.hero-note{color:#777184;}
-.hero-note>span{color:#a8a0b2;}
-.eyebrow,.page-heading .eyebrow,.nav-section{font-size:11px;color:#82728f;}
-.metric-label{font-size:14px;color:#756b81;}
-.metric-card>strong{color:#282335;font-size:34px;}
-.panel-heading h2,.section-title h2{font-size:16px;color:#41384f;}
-.page-heading h1{color:#282335;}
-.page-heading>div>p:last-child{font-size:14px;color:#797184;}
-.report-title,td{font-size:14px;color:#4e445d;}
-th{font-size:12px;color:#7a7088;}
-.report-title{max-width:340px;}
-.status-new{color:#7451b4;background:#f2ecff;border-color:#e7def9;}
-.status-triaged{color:#5562ac;background:#eef0ff;}
-.status-in_progress{color:#946b21;background:#fff8e7;border-color:#f2e4be;}
-.status-resolved{color:#357351;background:#eef9f2;border-color:#dbeee1;}
-.status-closed{color:#6e6878;}
-.badge,.priority,.priority-breakdown-row,.priority-summary span,.date-chip{font-size:12px;}
-.priority-critical{color:#ac4058;}.priority-high{color:#9b6b28;}.priority-medium{color:#80609b;}.priority-low{color:#5b7898;}
-.priority-breakdown-row,.priority-breakdown-row strong{color:#786784;}
-.priority-summary strong{color:#473351;}
-.project-card h3{font-size:14px;color:#5a476a;}.project-card p{font-size:12px;color:#7c6b87;}
-.new-project-card{font-size:14px;color:#7c5e98;}
-.detail-panel>p,.detail-panel>div>p,.settings-panel>p,.detail-panel p{color:#71647c;}
-.detail-panel h2,.settings-panel>h2,.project-list-card h2,.plan-option h2{color:#493754;}
-.detail-panel h3,.settings-panel .form-stack h3{color:#6d557f;}
-.field-hint,.optional,.field-error{font-size:12px;}
-.context-list,.context-list dt,.context-list dd,.event strong,.comment strong{font-size:14px;}
-.team-row strong,.invitation-row,.repository-row,.installation{font-size:14px;}
-.feature-band h2,.section-intro h2,.installation-section h2,.faq-section h2,.public-heading h1{color:#493952;}
-.workflow-steps h3,.feature-card h2,.bottom-cta h2,.pricing-card h2{color:#5b4070;}
-.privacy-row strong{font-size:14px;}.privacy-row span{font-size:12px;}
-.faq-section summary{font-size:16px;}.marketing-footer p,.marketing-footer>div:nth-child(2){font-size:13px;}
-.auth-card label,.auth-card .input,.auth-card>.muted,.auth-switch{color:#6e5b7c;}
-.auth-card>.muted{font-size:16px;}.auth-card h1{color:#50345f;}.auth-footer{font-size:12px;}
-.widget-header h1{color:#493154;}.widget-header p{color:#7b6888;font-size:13px;}
-.widget-fieldset label,.widget-fieldset label>.input,.widget-submit{font-size:14px;color:#685173;}
-.widget-submit{color:#fff;}.widget-fieldset .input::placeholder{color:#8f7d9c;}
-.widget-extra summary,.upload-zone,.privacy-details summary{font-size:12px!important;}
-.upload-zone{color:#806193!important;}.upload-zone small{font-size:11px;color:#8b749a;}
-.privacy-details{color:#53765e;}.privacy-details p{color:#56745f;font-size:12px;}
-.widget-credit{font-size:11px;}.widget-fields{gap:18px;}
-.prose-page,.docs-layout .prose-page{color:#6e5d79;font-size:16px;}
-.docs-nav a,.prose-page a{color:#7850a0;font-size:14px;}
-.prose-page h1,.prose-page h2{color:#563767;}
-.code-block{color:#775394;}.install-code>p{color:#785b8d!important;font-size:12px!important;}
-.prose-page code{color:#775394;}.demo-banner{font-size:13px;color:#7c5e8f;}
-.bottom-cta p,.pricing-note,.demo-instructions p{color:#7d638d;font-size:14px;}
-@media(max-width:760px){.hero-note{font-size:10px;}.hero-support{font-size:15px;}.app-nav .nav-link{font-size:12px;}.metric-label{font-size:13px;}.metric-caption{font-size:11px;}.page-heading h1{font-size:25px;}.value-strip>div{font-size:11px;}.hero h1{font-size:44px;}.marketing-footer>div:nth-child(2){font-size:12px;}.marketing-footer>div:first-child p{font-size:12px;}}
+.mobile-logout {
+  display: none;
+}
+@media (max-width: 760px) {
+  .mobile-logout {
+    display: flex;
+  }
+  .topbar-right {
+    gap: 7px;
+  }
+}
+body {
+  font-size: 16px;
+}
+.nav-link,
+.sidebar .nav-link,
+.marketing-nav > nav,
+.login-link,
+.button-sm {
+  font-size: 14px;
+}
+.sidebar .nav-link.active {
+  color: #6245c2;
+  background: #efebff;
+}
+.hero h1 > span {
+  color: #7452b1;
+}
+.marketing-nav .button-primary,
+.hero-ctas .button-primary,
+.bottom-cta > .button,
+.heading-actions .button,
+.widget-submit,
+.widget-success .button {
+  background: #6955e8;
+  color: white;
+}
+.hero-support,
+.section-intro > p:last-child,
+.workflow-steps p,
+.feature-band > div > p:not(.eyebrow),
+.installation-section > div > p:not(.eyebrow),
+.faq-section details > p,
+.feature-card p,
+.demo-intro > p:last-child {
+  font-size: 16px;
+  color: #737083;
+}
+.hero-description {
+  color: #514a60;
+}
+.release-pill,
+.hero-note,
+.value-strip > span,
+.value-strip > div,
+.text-link,
+.metric-caption,
+.panel-heading p,
+.chart-caption,
+.table-date,
+.report-reference,
+.table-project {
+  font-size: 12px;
+}
+.hero-note {
+  color: #777184;
+}
+.hero-note > span {
+  color: #a8a0b2;
+}
+.eyebrow,
+.page-heading .eyebrow,
+.nav-section {
+  font-size: 11px;
+  color: #82728f;
+}
+.metric-label {
+  font-size: 14px;
+  color: #756b81;
+}
+.metric-card > strong {
+  color: #282335;
+  font-size: 34px;
+}
+.panel-heading h2,
+.section-title h2 {
+  font-size: 16px;
+  color: #41384f;
+}
+.page-heading h1 {
+  color: #282335;
+}
+.page-heading > div > p:last-child {
+  font-size: 14px;
+  color: #797184;
+}
+.report-title,
+td {
+  font-size: 14px;
+  color: #4e445d;
+}
+th {
+  font-size: 12px;
+  color: #7a7088;
+}
+.report-title {
+  max-width: 340px;
+}
+.status-new {
+  color: #7451b4;
+  background: #f2ecff;
+  border-color: #e7def9;
+}
+.status-triaged {
+  color: #5562ac;
+  background: #eef0ff;
+}
+.status-in_progress {
+  color: #946b21;
+  background: #fff8e7;
+  border-color: #f2e4be;
+}
+.status-resolved {
+  color: #357351;
+  background: #eef9f2;
+  border-color: #dbeee1;
+}
+.status-closed {
+  color: #6e6878;
+}
+.badge,
+.priority,
+.priority-breakdown-row,
+.priority-summary span,
+.date-chip {
+  font-size: 12px;
+}
+.priority-critical {
+  color: #ac4058;
+}
+.priority-high {
+  color: #9b6b28;
+}
+.priority-medium {
+  color: #80609b;
+}
+.priority-low {
+  color: #5b7898;
+}
+.priority-breakdown-row,
+.priority-breakdown-row strong {
+  color: #786784;
+}
+.priority-summary strong {
+  color: #473351;
+}
+.project-card h3 {
+  font-size: 14px;
+  color: #5a476a;
+}
+.project-card p {
+  font-size: 12px;
+  color: #7c6b87;
+}
+.new-project-card {
+  font-size: 14px;
+  color: #7c5e98;
+}
+.detail-panel > p,
+.detail-panel > div > p,
+.settings-panel > p,
+.detail-panel p {
+  color: #71647c;
+}
+.detail-panel h2,
+.settings-panel > h2,
+.project-list-card h2,
+.plan-option h2 {
+  color: #493754;
+}
+.detail-panel h3,
+.settings-panel .form-stack h3 {
+  color: #6d557f;
+}
+.field-hint,
+.optional,
+.field-error {
+  font-size: 12px;
+}
+.context-list,
+.context-list dt,
+.context-list dd,
+.event strong,
+.comment strong {
+  font-size: 14px;
+}
+.team-row strong,
+.invitation-row,
+.repository-row,
+.installation {
+  font-size: 14px;
+}
+.feature-band h2,
+.section-intro h2,
+.installation-section h2,
+.faq-section h2,
+.public-heading h1 {
+  color: #493952;
+}
+.workflow-steps h3,
+.feature-card h2,
+.bottom-cta h2,
+.pricing-card h2 {
+  color: #5b4070;
+}
+.privacy-row strong {
+  font-size: 14px;
+}
+.privacy-row span {
+  font-size: 12px;
+}
+.faq-section summary {
+  font-size: 16px;
+}
+.marketing-footer p,
+.marketing-footer > div:nth-child(2) {
+  font-size: 13px;
+}
+.auth-card label,
+.auth-card .input,
+.auth-card > .muted,
+.auth-switch {
+  color: #6e5b7c;
+}
+.auth-card > .muted {
+  font-size: 16px;
+}
+.auth-card h1 {
+  color: #50345f;
+}
+.auth-footer {
+  font-size: 12px;
+}
+.widget-header h1 {
+  color: #493154;
+}
+.widget-header p {
+  color: #7b6888;
+  font-size: 13px;
+}
+.widget-fieldset label,
+.widget-fieldset label > .input,
+.widget-submit {
+  font-size: 14px;
+  color: #685173;
+}
+.widget-submit {
+  color: #fff;
+}
+.widget-fieldset .input::placeholder {
+  color: #8f7d9c;
+}
+.widget-extra summary,
+.upload-zone,
+.privacy-details summary {
+  font-size: 12px !important;
+}
+.upload-zone {
+  color: #806193 !important;
+}
+.upload-zone small {
+  font-size: 11px;
+  color: #8b749a;
+}
+.privacy-details {
+  color: #53765e;
+}
+.privacy-details p {
+  color: #56745f;
+  font-size: 12px;
+}
+.widget-credit {
+  font-size: 11px;
+}
+.widget-fields {
+  gap: 18px;
+}
+.prose-page,
+.docs-layout .prose-page {
+  color: #6e5d79;
+  font-size: 16px;
+}
+.docs-nav a,
+.prose-page a {
+  color: #7850a0;
+  font-size: 14px;
+}
+.prose-page h1,
+.prose-page h2 {
+  color: #563767;
+}
+.code-block {
+  color: #775394;
+}
+.install-code > p {
+  color: #785b8d !important;
+  font-size: 12px !important;
+}
+.prose-page code {
+  color: #775394;
+}
+.demo-banner {
+  font-size: 13px;
+  color: #7c5e8f;
+}
+.bottom-cta p,
+.pricing-note,
+.demo-instructions p {
+  color: #7d638d;
+  font-size: 14px;
+}
+@media (max-width: 760px) {
+  .hero-note {
+    font-size: 10px;
+  }
+  .hero-support {
+    font-size: 15px;
+  }
+  .app-nav .nav-link {
+    font-size: 12px;
+  }
+  .metric-label {
+    font-size: 13px;
+  }
+  .metric-caption {
+    font-size: 11px;
+  }
+  .page-heading h1 {
+    font-size: 25px;
+  }
+  .value-strip > div {
+    font-size: 11px;
+  }
+  .hero h1 {
+    font-size: 44px;
+  }
+  .marketing-footer > div:nth-child(2) {
+    font-size: 12px;
+  }
+  .marketing-footer > div:first-child p {
+    font-size: 12px;
+  }
+}

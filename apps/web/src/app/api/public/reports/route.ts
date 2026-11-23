@@ -127,6 +127,7 @@ export async function POST(request: Request) {
         { status: limit ? 429 : 400 },
       );
     }
+    if (!result.data) throw new Error('Submission receipt unavailable');
     committed = !result.data.duplicate;
     return NextResponse.json(
       { reference: result.data.reference, duplicate: result.data.duplicate },

@@ -8,5 +8,11 @@ dist/
 test-results/
 playwright-report/
 .supabase/
+supabase/.temp/
+supabase/.branches/
+supabase/snippets/
+*.log
 apps/web/public/widget.js
 apps/web/public/widget.js.map
+
+supabase/.temp/

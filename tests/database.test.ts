@@ -121,7 +121,7 @@ describe('clean PostgreSQL migrations and tenant boundaries', () => {
     await asUser(alice);
     await expect(
       db.query("select public.update_report($1,$2,'triaged','high',$3)", [orgA, reportId, bob]),
-    ).rejects.toThrow(/foreign key/);
+    ).rejects.toThrow(/foreign key|active workspace member/);
     await asUser(bob);
     await expect(
       db.query("select public.update_report($1,$2,'triaged','high',null)", [orgA, reportId]),
@@ -268,7 +268,9 @@ describe('GitHub export state machine', () => {
   });
   it('stale processing transitions to reconciliation, never blindly reclaims', async () => {
     await service();
-    await db.exec("update github_exports set updated_at=now()-interval '3 minutes'");
+    await db.exec(
+      "reset role; alter table github_exports disable trigger set_updated_at; update github_exports set updated_at=now()-interval '3 minutes'; alter table github_exports enable trigger set_updated_at;",
+    );
     await asUser(member);
     const claim = (
       await scalar('select claim_export($1,$2,$3) as result', [orgA, reportId, repository])
@@ -298,5 +300,34 @@ describe('GitHub export state machine', () => {
     await expect(db.query('select workspace_metrics($1)', [orgB])).rejects.toThrow(
       /Membership required/,
     );
+  });
+});
+describe('membership archival', () => {
+  it('revokes a historical author without deleting comments', async () => {
+    await asUser(alice);
+    await db.query('select change_member($1,$2,null)', [orgA, member]);
+    expect(
+      (await db.query('select * from report_comments where report_id=$1', [reportId])).rows,
+    ).toHaveLength(1);
+    await asUser(member);
+    expect((await db.query('select * from reports')).rows).toHaveLength(0);
+    await expect(
+      db.query("select add_comment($1,$2,'No longer allowed')", [orgA, reportId]),
+    ).rejects.toThrow(/Membership required/);
+  });
+  it('rejects assignment to a removed member', async () => {
+    await asUser(alice);
+    await expect(
+      db.query("select update_report($1,$2,'triaged','high',$3)", [orgA, reportId, member]),
+    ).rejects.toThrow(/active workspace member/);
+  });
+  it('can reactivate through a new verified email-bound invitation', async () => {
+    await asUser(alice);
+    await db.query("select invite_member($1,'member@example.test','member','reactivate-hash')", [
+      orgA,
+    ]);
+    await asUser(member);
+    await db.query("select accept_invitation('reactivate-hash')");
+    expect((await db.query('select * from reports')).rows.length).toBeGreaterThan(0);
   });
 });

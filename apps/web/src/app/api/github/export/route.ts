@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       p_report: input.reportId,
       p_repository: input.repositoryId,
     });
-    if (claim.error) throw claim.error;
+    if (claim.error || !claim.data) throw claim.error || new Error('Export claim unavailable');
     const record = claim.data.export;
     exportId = record.id;
     if (record.status === 'completed')

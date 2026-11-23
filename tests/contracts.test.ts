@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { reportSchema, safeLocation, normalizeOrigin } from '../packages/shared/src';
 import { imageType, sanitizeImage } from '../apps/web/src/lib/images';
-import sharp from '../apps/web/node_modules/sharp';
+import sharp from 'sharp';
 import { sign, verify, webhookValid, boundedBody } from '../apps/web/src/lib/security';
 import {
   issueBody,

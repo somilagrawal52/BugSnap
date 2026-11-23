@@ -30,18 +30,16 @@ export async function refreshRepositories(installation: {
     .eq('installation_id', installation.id);
   if (disable.error) throw disable.error;
   for (const repository of repositories) {
-    const result = await db
-      .from('github_repositories')
-      .upsert(
-        {
-          organization_id: installation.organization_id,
-          installation_id: installation.id,
-          github_id: repository.id,
-          full_name: repository.full_name,
-          enabled: true,
-        },
-        { onConflict: 'installation_id,github_id' },
-      );
+    const result = await db.from('github_repositories').upsert(
+      {
+        organization_id: installation.organization_id,
+        installation_id: installation.id,
+        github_id: repository.id,
+        full_name: repository.full_name,
+        enabled: true,
+      },
+      { onConflict: 'installation_id,github_id' },
+    );
     if (result.error) throw result.error;
   }
 }

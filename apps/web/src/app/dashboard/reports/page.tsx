@@ -22,8 +22,10 @@ export default async function Reports({
     query = query.or(
       `reference.ilike.%${search}%,title.ilike.%${search}%,description.ilike.%${search}%`,
     );
-  if (statuses.includes(s.status as any)) query = query.eq('status', s.status);
-  if (priorities.includes(s.priority as any)) query = query.eq('priority', s.priority);
+  const status = statuses.find((v) => v === s.status);
+  if (status) query = query.eq('status', status);
+  const priority = priorities.find((v) => v === s.priority);
+  if (priority) query = query.eq('priority', priority);
   if (s.project && /^[a-f0-9-]{36}$/.test(s.project)) query = query.eq('project_id', s.project);
   if (s.assignee === 'unassigned') query = query.is('assignee_id', null);
   else if (s.assignee && /^[a-f0-9-]{36}$/.test(s.assignee))
@@ -37,7 +39,8 @@ export default async function Reports({
     db
       .from('organization_members')
       .select('user_id,profiles(display_name)')
-      .eq('organization_id', org.id),
+      .eq('organization_id', org.id)
+      .eq('active', true),
   ]);
   [result, projects, members].forEach(assertResult);
   const pageHref = (p: number) => {

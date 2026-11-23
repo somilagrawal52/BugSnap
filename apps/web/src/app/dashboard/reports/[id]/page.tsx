@@ -32,7 +32,8 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
     db
       .from('organization_members')
       .select('user_id,profiles(display_name)')
-      .eq('organization_id', org.id),
+      .eq('organization_id', org.id)
+      .eq('active', true),
     db
       .from('github_repositories')
       .select('*')

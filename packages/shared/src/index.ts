@@ -1,4 +1,6 @@
 import { z } from 'zod';
+export type { Database, Json } from './database.types';
+export type { AppDatabase, WorkspaceMetrics } from './app-database';
 export const statuses = ['new', 'triaged', 'in_progress', 'resolved', 'closed'] as const;
 export const priorities = ['low', 'medium', 'high', 'critical'] as const;
 export const plans = {

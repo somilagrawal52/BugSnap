@@ -13,5 +13,6 @@ export const githubConfigured = () =>
     process.env.GITHUB_APP_SLUG &&
     process.env.GITHUB_PRIVATE_KEY &&
     process.env.GITHUB_CLIENT_ID &&
-    process.env.GITHUB_CLIENT_SECRET
+    process.env.GITHUB_CLIENT_SECRET &&
+    process.env.GITHUB_WEBHOOK_SECRET
   );

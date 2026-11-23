@@ -4,7 +4,10 @@ import { useReactTable, getCoreRowModel, flexRender, type ColumnDef } from '@tan
 import { Badge } from '@bugsnap/ui';
 import { label, type Report } from '@bugsnap/shared';
 import { MessageSquare, Inbox } from 'lucide-react';
-type Row = Report & { projects?: { name: string } | null; assignee?:{display_name:string}|null };
+type Row = Report & {
+  projects?: { name: string } | null;
+  assignee?: { display_name: string } | null;
+};
 const columns: ColumnDef<Row>[] = [
   {
     accessorKey: 'reference',
@@ -52,7 +55,11 @@ const columns: ColumnDef<Row>[] = [
     accessorKey: 'assignee_id',
     header: 'Assignee',
     cell: ({ row }) => (
-      <span className="table-project">{row.original.assignee_id ? row.original.assignee?.display_name||'Teammate' : 'Unassigned'}</span>
+      <span className="table-project">
+        {row.original.assignee_id
+          ? row.original.assignee?.display_name || 'Teammate'
+          : 'Unassigned'}
+      </span>
     ),
   },
   {

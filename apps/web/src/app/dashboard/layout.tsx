@@ -96,6 +96,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Plus size={15} />
               New project
             </Link>
+            <form action={logout} className="mobile-logout">
+              <button className="icon-button" aria-label="Sign out">
+                <LogOut size={17} />
+              </button>
+            </form>
           </span>
         </header>
         <main className="dashboard-content">{children}</main>
