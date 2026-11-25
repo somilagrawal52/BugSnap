@@ -755,6 +755,7 @@ export type Database = {
       };
       is_admin: { Args: { p_org: string }; Returns: boolean };
       rename_workspace: { Args: { p_name: string; p_org: string }; Returns: undefined };
+      revoke_invitation: { Args: { p_invitation: string; p_org: string }; Returns: undefined };
       role_in: { Args: { p_org: string }; Returns: Database['public']['Enums']['member_role'] };
       save_project: {
         Args: {

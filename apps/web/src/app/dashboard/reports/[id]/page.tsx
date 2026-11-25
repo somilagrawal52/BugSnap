@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { statuses, priorities, label } from '@bugsnap/shared';
 import { workspace, assertResult } from '@/lib/workspace';
+import { reportToMarkdown } from '@/lib/report-export';
 import { updateReport, addComment } from '@/app/actions';
 import { ActionForm } from '@/components/action-form';
 import { PageHeading } from '@/components/page-heading';
 import { ExportButton } from '@/components/export-button';
+import { CopyMarkdown } from '@/components/copy-markdown';
 export default async function ReportDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { db, org } = await workspace();
@@ -26,7 +28,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
       .order('created_at'),
     db
       .from('report_events')
-      .select('*')
+      .select('*,actor:actor_id(display_name)')
       .eq('report_id', id)
       .order('created_at', { ascending: false }),
     db
@@ -43,16 +45,24 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
     db.from('github_exports').select('*,github_repositories(full_name)').eq('report_id', id),
   ]);
   [attachments, comments, events, members, repos, exports].forEach(assertResult);
+  const memberNames = new Map<string, string>(
+    (members.data || []).map((m: any) => [
+      m.user_id,
+      m.profiles?.display_name || m.user_id.slice(0, 8),
+    ]),
+  );
   return (
     <>
       <Link href="/dashboard/reports" className="back-link">
         ← All reports
       </Link>
       <PageHeading
-        eyebrow={`${r.reference} · ${r.projects.name}`}
+        eyebrow={`${r.reference} · ${r.projects?.name || 'Project'}`}
         title={r.title}
         description={`Submitted ${new Date(r.created_at).toLocaleString('en', { timeZone: 'UTC' })} UTC`}
-      />
+      >
+        <CopyMarkdown markdown={reportToMarkdown(r as any)} />
+      </PageHeading>
       <div className="detail-grid">
         <div className="detail-main">
           <section className="panel detail-panel">
@@ -116,16 +126,21 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           </section>
           <section className="panel detail-panel">
             <h2>Activity history</h2>
-            {events.data?.map((e) => (
+            {events.data?.map((e: any) => (
               <div className="event" key={e.id}>
                 <span className="event-mark" />
                 <div>
-                  <strong>{label(e.kind.replaceAll('.', ' '))}</strong>
+                  <strong>
+                    {label(e.kind.replaceAll('.', ' '))}
+                    {e.actor?.display_name ? ` · ${e.actor.display_name}` : ''}
+                  </strong>
                   {e.kind === 'report.updated' && e.details?.before && e.details?.after && (
                     <p className="small muted">
                       {label(e.details.before.status)} → {label(e.details.after.status)} ·{' '}
                       {label(e.details.after.priority)} priority ·{' '}
-                      {e.details.after.assignee ? 'Assigned' : 'Unassigned'}
+                      {e.details.after.assignee
+                        ? `Assigned to ${memberNames.get(e.details.after.assignee) || 'teammate'}`
+                        : 'Unassigned'}
                     </p>
                   )}
                   <time>
@@ -176,20 +191,34 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
           <section className="panel detail-panel">
             <h2>Technical context</h2>
             <dl className="context-list">
-              {Object.entries({
-                Page: r.context.origin + r.context.pathname,
-                Browser: r.context.browser,
-                OS: r.context.os,
-                Viewport: `${r.context.viewport?.width} × ${r.context.viewport?.height}`,
-                Environment: r.context.environment,
-                Version: r.context.appVersion || 'Not supplied',
-                Contact: r.reporter_email || 'Not supplied',
-              }).map(([key, value]) => (
+              {[
+                ['Page', r.context.origin + r.context.pathname],
+                ['Browser', r.context.browser],
+                ['OS', r.context.os],
+                ['Viewport', `${r.context.viewport?.width} × ${r.context.viewport?.height}`],
+                ['Environment', r.context.environment],
+                ['Version', r.context.appVersion || 'Not supplied'],
+              ].map(([key, value]) => (
                 <div key={key}>
                   <dt>{key}</dt>
                   <dd>{String(value)}</dd>
                 </div>
               ))}
+              <div>
+                <dt>Contact</dt>
+                <dd>
+                  {r.reporter_email ? (
+                    <a
+                      href={`mailto:${r.reporter_email}?subject=${encodeURIComponent(`Re: [${r.reference}] ${r.title}`)}`}
+                      className="text-link"
+                    >
+                      {r.reporter_email}
+                    </a>
+                  ) : (
+                    'Not supplied'
+                  )}
+                </dd>
+              </div>
             </dl>
           </section>
           <section className="panel detail-panel">
@@ -201,7 +230,7 @@ export default async function ReportDetail({ params }: { params: Promise<{ id: s
             <ExportButton reportId={id} repositories={repos.data || []} />
             {exports.data?.map((e: any) => (
               <div className="export-record" key={e.id}>
-                <strong>{e.github_repositories.full_name}</strong>
+                <strong>{e.github_repositories?.full_name || 'Repository'}</strong>
                 <p>{label(e.status)}</p>
                 {e.issue_url && (
                   <a href={e.issue_url} target="_blank" rel="noreferrer">

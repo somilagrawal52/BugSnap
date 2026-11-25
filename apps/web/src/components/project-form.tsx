@@ -1,5 +1,9 @@
+'use client';
+import { useState } from 'react';
+import { slugify } from '@bugsnap/shared';
 import { ActionForm } from './action-form';
 import { saveProject } from '@/app/actions';
+
 export function ProjectForm({
   project,
   domain,
@@ -9,6 +13,16 @@ export function ProjectForm({
   domain?: string;
   settings?: any;
 }) {
+  const [slug, setSlug] = useState<string>(project?.slug || '');
+  const [slugEdited, setSlugEdited] = useState<boolean>(!!project?.slug);
+  const [labelText, setLabelText] = useState<string>(settings?.label || 'Report a bug');
+  const [accent, setAccent] = useState<string>(settings?.accent || '#6554e8');
+  const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>(
+    settings?.position === 'bottom-left' ? 'bottom-left' : 'bottom-right',
+  );
+
+  const validHex = /^#[a-fA-F0-9]{6}$/.test(accent) ? accent : '#6554e8';
+
   return (
     <ActionForm
       action={saveProject.bind(null, project?.id || null)}
@@ -25,6 +39,9 @@ export function ProjectForm({
             maxLength={80}
             defaultValue={project?.name}
             placeholder="Acme Dashboard"
+            onChange={(e) => {
+              if (!slugEdited) setSlug(slugify(e.target.value));
+            }}
           />
         </label>
         <label>
@@ -34,7 +51,11 @@ export function ProjectForm({
             name="slug"
             required
             pattern="[a-z0-9][a-z0-9-]{1,49}"
-            defaultValue={project?.slug}
+            value={slug}
+            onChange={(e) => {
+              setSlugEdited(true);
+              setSlug(e.target.value);
+            }}
             placeholder="acme-dashboard"
           />
           <span className="field-hint">Lowercase letters, numbers, and hyphens.</span>
@@ -73,22 +94,39 @@ export function ProjectForm({
             name="label"
             required
             maxLength={40}
-            defaultValue={settings?.label || 'Report a bug'}
+            value={labelText}
+            onChange={(e) => setLabelText(e.target.value)}
           />
         </label>
         <label>
           Accent color
-          <input
-            className="input"
-            name="accent"
-            pattern="#[a-fA-F0-9]{6}"
-            defaultValue={settings?.accent || '#6554e8'}
-            required
-          />
+          <div className="color-field">
+            <input
+              type="color"
+              aria-label="Pick accent color"
+              className="color-swatch"
+              value={validHex}
+              onChange={(e) => setAccent(e.target.value)}
+            />
+            <input
+              className="input"
+              name="accent"
+              pattern="#[a-fA-F0-9]{6}"
+              value={accent}
+              onChange={(e) => setAccent(e.target.value)}
+              required
+            />
+          </div>
         </label>
         <label>
           Position
-          <select name="position" defaultValue={settings?.position || 'bottom-right'}>
+          <select
+            name="position"
+            value={position}
+            onChange={(e) =>
+              setPosition(e.target.value === 'bottom-left' ? 'bottom-left' : 'bottom-right')
+            }
+          >
             <option value="bottom-right">Bottom right</option>
             <option value="bottom-left">Bottom left</option>
           </select>
@@ -103,6 +141,16 @@ export function ProjectForm({
             placeholder="e.g. 1.4.2"
           />
         </label>
+      </div>
+      <div className="launcher-preview-box" aria-label="Widget launcher preview">
+        <span className="field-hint">Launcher preview ({position.replace('-', ' ')})</span>
+        <div
+          className={`launcher-preview-stage ${position === 'bottom-left' ? 'left' : 'right'}`}
+        >
+          <span className="launcher-preview-pill" style={{ backgroundColor: validHex }}>
+            {labelText.trim() || 'Report a bug'}
+          </span>
+        </div>
       </div>
       <label className="checkbox-label">
         <input type="checkbox" name="enabled" defaultChecked={project?.enabled ?? true} />

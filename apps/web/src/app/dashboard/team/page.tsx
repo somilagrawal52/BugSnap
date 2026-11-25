@@ -1,7 +1,7 @@
 import { workspace, assertResult } from '@/lib/workspace';
 import { PageHeading } from '@/components/page-heading';
 import { ActionForm } from '@/components/action-form';
-import { inviteMember, changeMember } from '@/app/actions';
+import { inviteMember, changeMember, revokeInvitation } from '@/app/actions';
 import { Badge } from '@bugsnap/ui';
 export default async function Team() {
   const { db, org, role } = await workspace();
@@ -34,9 +34,9 @@ export default async function Team() {
         </div>
         {result.data?.map((m: any) => (
           <div className="team-row" key={m.user_id}>
-            <span className="avatar">{(m.profiles.display_name || 'T').slice(0, 1)}</span>
+            <span className="avatar">{(m.profiles?.display_name || 'T').slice(0, 1)}</span>
             <div>
-              <strong>{m.profiles.display_name || 'Teammate'}</strong>
+              <strong>{m.profiles?.display_name || 'Teammate'}</strong>
               <small className="muted">{m.user_id.slice(0, 8)}</small>
             </div>
             <Badge>{m.role}</Badge>

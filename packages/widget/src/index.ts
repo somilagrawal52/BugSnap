@@ -4,6 +4,8 @@ type Config = {
   label?: string;
   position?: 'bottom-left' | 'bottom-right';
   accent?: string;
+  hideLauncher?: boolean;
+  email?: string;
 };
 type Remote = {
   token: string;
@@ -19,12 +21,16 @@ declare global {
       open: () => void;
       close: () => void;
       destroy: () => void;
+      isOpen?: () => boolean;
+      setEmail?: (email: string) => void;
     };
   }
 }
 let cleanup: (() => void) | undefined;
 let openWidget = () => {};
 let closeWidget = () => {};
+let isWidgetOpen = () => false;
+let setWidgetEmail = (_email: string) => {};
 let generation = 0;
 export function collectContext() {
   const ua = navigator.userAgent;
@@ -93,9 +99,12 @@ export async function init(config: Config) {
     const style = document.createElement('style');
     const accent = /^#[a-f0-9]{6}$/i.test(config.accent ?? '') ? config.accent! : remote.accent;
     const left = (config.position ?? remote.position) === 'bottom-left';
-    style.textContent = `:host{all:initial}*{box-sizing:border-box}button{font:600 14px system-ui;cursor:pointer}button:focus-visible,iframe:focus-visible{outline:3px solid #a5b4fc;outline-offset:4px}.launcher{position:fixed;bottom:24px;${left ? 'left' : 'right'}:24px;border:0;border-radius:12px;background:${accent};color:white;padding:15px 20px;box-shadow:0 4px 20px #0003;z-index:2147483645}.panel{position:fixed;bottom:84px;${left ? 'left' : 'right'}:24px;width:420px;height:min(720px,calc(100dvh - 110px));border:1px solid #e0e0eb;border-radius:18px;box-shadow:0 15px 70px #17203433;z-index:2147483646;background:white;overflow:hidden}iframe{height:100%;width:100%;border:0}[hidden]{display:none!important}@media(max-width:480px){.panel{left:12px;right:12px;bottom:80px;width:calc(100% - 24px);height:calc(100dvh - 100px)}.launcher{bottom:18px;${left ? 'left' : 'right'}:16px}}`;
+    const hideLauncher = !!config.hideLauncher;
+    let reporterEmail = typeof config.email === 'string' ? config.email.trim().slice(0, 254) : '';
+    style.textContent = `:host{all:initial}*{box-sizing:border-box}button{font:600 14px system-ui;cursor:pointer}button:focus-visible,iframe:focus-visible{outline:3px solid #a5b4fc;outline-offset:4px}.launcher{position:fixed;bottom:24px;${left ? 'left' : 'right'}:24px;border:0;border-radius:12px;background:${accent};color:white;padding:15px 20px;box-shadow:0 4px 20px #0003;z-index:2147483645}.panel{position:fixed;bottom:${hideLauncher ? '24px' : '84px'};${left ? 'left' : 'right'}:24px;width:420px;height:min(720px,calc(100dvh - ${hideLauncher ? '48px' : '110px'}));border:1px solid #e0e0eb;border-radius:18px;box-shadow:0 15px 70px #17203433;z-index:2147483646;background:white;overflow:hidden}iframe{height:100%;width:100%;border:0}[hidden]{display:none!important}@media(max-width:480px){.panel{left:12px;right:12px;bottom:${hideLauncher ? '12px' : '80px'};width:calc(100% - 24px);height:calc(100dvh - ${hideLauncher ? '24px' : '100px'})}.launcher{bottom:18px;${left ? 'left' : 'right'}:16px}}`;
     const button = document.createElement('button');
     button.className = 'launcher';
+    button.hidden = hideLauncher;
     button.textContent = (config.label ?? remote.label).slice(0, 40);
     button.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-haspopup', 'dialog');
@@ -119,6 +128,7 @@ export async function init(config: Config) {
             type: 'context',
             channel,
             token: remote.token,
+            ...(reporterEmail ? { email: reporterEmail } : {}),
             context: {
               ...collectContext(),
               ...(remote.appVersion ? { appVersion: remote.appVersion } : {}),
@@ -126,6 +136,11 @@ export async function init(config: Config) {
           },
           appOrigin,
         );
+    };
+    isWidgetOpen = () => !panel.hidden;
+    setWidgetEmail = (email: string) => {
+      reporterEmail = typeof email === 'string' ? email.trim().slice(0, 254) : '';
+      send();
     };
     openWidget = () => {
       panel.hidden = false;
@@ -150,7 +165,7 @@ export async function init(config: Config) {
     closeWidget = () => {
       panel.hidden = true;
       button.setAttribute('aria-expanded', 'false');
-      button.focus();
+      if (!button.hidden) button.focus();
     };
     button.onclick = () => (panel.hidden ? openWidget() : closeWidget());
     const message = (e: MessageEvent) => {
@@ -190,6 +205,8 @@ export async function init(config: Config) {
       cleanup = undefined;
       openWidget = () => {};
       closeWidget = () => {};
+      isWidgetOpen = () => false;
+      setWidgetEmail = () => {};
     };
   } catch {
     /* SDK failure must not break the host. No host data is logged. */
@@ -204,6 +221,8 @@ if (typeof window !== 'undefined') {
       generation++;
       cleanup?.();
     },
+    isOpen: () => isWidgetOpen(),
+    setEmail: (email: string) => setWidgetEmail(email),
   };
   const script = document.currentScript as HTMLScriptElement | null;
   if (script?.dataset.projectKey) {
@@ -211,6 +230,7 @@ if (typeof window !== 'undefined') {
       void window.BugSnap!.init({
         projectKey: script.dataset.projectKey!,
         appOrigin: new URL(script.src).origin,
+        hideLauncher: script.dataset.hideLauncher === 'true',
       });
     if (document.body) start();
     else document.addEventListener('DOMContentLoaded', start, { once: true });

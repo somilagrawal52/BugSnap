@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { normalizeOrigin, projectSchema, statuses, priorities } from '@bugsnap/shared';
 import { workspace, assertResult } from '@/lib/workspace';
 import { sessionClient } from '@/lib/supabase/server';
-import { appUrl, configured } from '@/lib/env';
+import { appUrl, configured, githubConfigured } from '@/lib/env';
+import { refreshRepositories } from '@/lib/github';
 import { hash } from '@/lib/security';
 export type ActionState = { error?: string; success?: string; redirect?: string; link?: string };
 const field = (f: FormData, k: string) => String(f.get(k) || '');
@@ -34,6 +35,8 @@ function failure(e: unknown): ActionState {
     'registered',
     'email',
     'project unavailable',
+    'github',
+    'installation',
   ];
   return {
     error: allowed.some((s) => lower.includes(s))
@@ -334,6 +337,50 @@ export async function selectRepository(
     );
     revalidatePath('/dashboard/integrations');
     return { success: 'Repository updated' };
+  } catch (e) {
+    return failure(e);
+  }
+}
+export async function revokeInvitation(
+  id: string,
+  _prev: ActionState,
+  _form: FormData,
+): Promise<ActionState> {
+  try {
+    const { db, org } = await workspace();
+    assertResult(
+      await db.rpc('revoke_invitation', {
+        p_org: org.id,
+        p_invitation: z.uuid().parse(id),
+      }),
+    );
+    revalidatePath('/dashboard/team');
+    return { success: 'Invitation revoked' };
+  } catch (e) {
+    return failure(e);
+  }
+}
+export async function syncGithubRepositories(
+  _prev: ActionState,
+  _form: FormData,
+): Promise<ActionState> {
+  try {
+    const { db, org, role } = await workspace();
+    if (role === 'member') throw new Error('Administrator required');
+    if (!githubConfigured()) throw new Error('GitHub App is not configured');
+    const installations = await db
+      .from('github_installations')
+      .select('id,organization_id,installation_id,suspended')
+      .eq('organization_id', org.id)
+      .eq('suspended', false);
+    assertResult(installations);
+    if (!installations.data?.length)
+      return { error: 'No active GitHub installation found for this workspace.' };
+    for (const installation of installations.data) {
+      await refreshRepositories(installation);
+    }
+    revalidatePath('/dashboard/integrations');
+    return { success: 'Repositories refreshed from GitHub' };
   } catch (e) {
     return failure(e);
   }

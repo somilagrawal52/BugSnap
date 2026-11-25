@@ -34,7 +34,7 @@ export const reportSchema = z
     steps: z.string().max(5000).default(''),
     expected: z.string().max(3000).default(''),
     actual: z.string().max(3000).default(''),
-    email: z.union([z.email().max(254), z.literal('')]).optional(),
+    email: z.string().trim().pipe(z.union([z.email().max(254), z.literal('')])).optional(),
     context: contextSchema,
     website: z.string().max(0).optional(),
     turnstileToken: z.string().max(3000).optional(),
@@ -104,3 +104,18 @@ export function normalizeOrigin(value: string, development = false) {
 }
 export const label = (v?: string | null) =>
   (v || '').replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+export function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50);
+}
+
+export function isValidDateString(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(value + 'T00:00:00.000Z');
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}

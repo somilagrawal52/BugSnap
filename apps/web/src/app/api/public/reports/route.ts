@@ -85,17 +85,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ reference: existing.data.reference, duplicate: true });
     }
     if (process.env.TURNSTILE_SECRET_KEY) {
-      const challengeResult = await fetch(
-        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-        {
-          method: 'POST',
-          body: new URLSearchParams({
-            secret: process.env.TURNSTILE_SECRET_KEY,
-            response: challenge || '',
-          }),
-          signal: AbortSignal.timeout(10000),
-        },
-      ).then((r) => r.json());
+      let challengeResult: { success?: boolean; hostname?: string };
+      try {
+        challengeResult = await fetch(
+          'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+          {
+            method: 'POST',
+            body: new URLSearchParams({
+              secret: process.env.TURNSTILE_SECRET_KEY,
+              response: challenge || '',
+            }),
+            signal: AbortSignal.timeout(10000),
+          },
+        ).then((r) => r.json());
+      } catch {
+        return NextResponse.json(
+          { error: 'Anti-spam verification unavailable. Please retry.' },
+          { status: 503 },
+        );
+      }
       if (!challengeResult.success || challengeResult.hostname !== new URL(request.url).hostname)
         return NextResponse.json({ error: 'Please complete the anti-spam check' }, { status: 400 });
     }

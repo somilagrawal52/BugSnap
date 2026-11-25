@@ -11,10 +11,14 @@ declare global {
         label?: string;
         position?: 'bottom-left' | 'bottom-right';
         accent?: string;
+        hideLauncher?: boolean;
+        email?: string;
       }) => Promise<void>;
       open: () => void;
       close: () => void;
       destroy: () => void;
+      isOpen?: () => boolean;
+      setEmail?: (email: string) => void;
     };
   }
 }

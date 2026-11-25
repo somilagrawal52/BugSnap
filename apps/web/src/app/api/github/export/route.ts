@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       !report.data ||
       !repository.data ||
       report.data.organization_id !== repository.data.organization_id ||
-      repository.data.github_installations.suspended
+      repository.data.github_installations?.suspended
     )
       return NextResponse.json({ error: 'Report or repository unavailable' }, { status: 404 });
     const claim = await db.rpc('claim_export', {
@@ -107,6 +107,9 @@ export async function POST(request: Request) {
     if (saved.error) throw saved.error;
     return NextResponse.json({ message: 'Issue created in GitHub', url: issue.data.html_url });
   } catch (error) {
+    if (error instanceof z.ZodError || error instanceof SyntaxError) {
+      return NextResponse.json({ error: 'Invalid export request payload' }, { status: 400 });
+    }
     if (exportId && writeStarted) {
       const uncertain = uncertainGithubFailure(error);
       await adminClient()

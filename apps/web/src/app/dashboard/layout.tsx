@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import { Brand } from '@/components/brand';
 import { workspace } from '@/lib/workspace';
-import { logout, switchWorkspace } from '@/app/actions';
+import { logout } from '@/app/actions';
 import { NavLinks } from '@/components/nav-links';
+import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 const icons = {
   overview: LayoutDashboard,
   reports: Inbox,
@@ -30,24 +31,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="app-shell">
       <aside className="sidebar">
         <Brand href="/dashboard" />
-        <form action={switchWorkspace} className="workspace-switch">
-          <span className="workspace-avatar">{org.name.slice(0, 1).toUpperCase()}</span>
-          <label className="sr-only" htmlFor="workspace">
-            Workspace
-          </label>
-          <select id="workspace" name="organization" defaultValue={org.id} aria-label="Workspace">
-            {memberships.map((m: any) => (
-              <option key={m.organization_id} value={m.organization_id}>
-                {m.organizations.name}
-              </option>
-            ))}
-          </select>
-          {memberships.length > 1 && (
-            <button type="submit" className="switch-button">
-              Go
-            </button>
-          )}
-        </form>
+        <WorkspaceSwitcher
+          currentOrgId={org.id}
+          currentOrgName={org.name}
+          memberships={memberships as any}
+        />
         <p className="nav-section">WORKSPACE</p>
         <NavLinks
           links={Object.keys(icons).map((key) => ({

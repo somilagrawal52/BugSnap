@@ -4,8 +4,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Script from 'next/script';
-import { X, ImagePlus, Check, ShieldCheck, Loader2, Bug, ChevronDown } from 'lucide-react';
+import {
+  X,
+  ImagePlus,
+  Check,
+  ShieldCheck,
+  Loader2,
+  Bug,
+  ChevronDown,
+  Pencil,
+} from 'lucide-react';
 import { contextSchema, MAX_IMAGE_BYTES, type SafeContext } from '@bugsnap/shared';
+import { ScreenshotAnnotator } from './screenshot-annotator';
 const schema = z.object({
   title: z.string().trim().min(3, 'Add a title with at least 3 characters.').max(180),
   description: z
@@ -16,7 +26,7 @@ const schema = z.object({
   steps: z.string().max(5000),
   expected: z.string().max(3000),
   actual: z.string().max(3000),
-  email: z.union([z.email('Enter a valid email.'), z.literal('')]),
+  email: z.string().trim().pipe(z.union([z.email('Enter a valid email.'), z.literal('')])),
   website: z.string().max(0),
 });
 type Form = z.infer<typeof schema>;
@@ -34,6 +44,8 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
     [token, setToken] = useState(''),
     [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(''),
+    [annotating, setAnnotating] = useState(false),
+    [dragging, setDragging] = useState(false),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [reference, setReference] = useState(''),
@@ -42,11 +54,14 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
     challengeNode = useRef<HTMLDivElement>(null),
     key = useRef(crypto.randomUUID()),
     sent = useRef(false),
-    lockedContext = useRef<SafeContext | null>(null);
+    lockedContext = useRef<SafeContext | null>(null),
+    prefilledEmail = useRef('');
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    reset,
+    setValue,
+    formState: { errors, dirtyFields },
   } = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -59,6 +74,8 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
       website: '',
     },
   });
+  const dirtyEmailRef = useRef(false);
+  dirtyEmailRef.current = !!dirtyFields.email;
   const message = (type: string) =>
     window.parent.postMessage({ protocol: 'bugsnap:v1', type, channel }, host);
   useEffect(() => {
@@ -77,6 +94,10 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
       if (result.success && result.data.origin === host) {
         setContext(result.data);
         setToken(event.data.token);
+        if (typeof event.data.email === 'string' && event.data.email.length <= 254) {
+          prefilledEmail.current = event.data.email;
+          if (!dirtyEmailRef.current) setValue('email', event.data.email);
+        }
       }
     };
     window.addEventListener('message', receive);
@@ -90,7 +111,7 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
       window.removeEventListener('message', receive);
       window.removeEventListener('keydown', keyboard);
     };
-  }, [host, channel]);
+  }, [host, channel, setValue]);
   useEffect(() => {
     if (!file) {
       setPreview('');
@@ -169,6 +190,26 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
       setBusy(false);
     }
   });
+  const resetReport = () => {
+    key.current = crypto.randomUUID();
+    sent.current = false;
+    lockedContext.current = null;
+    setReference('');
+    setFile(null);
+    setAnnotating(false);
+    setError('');
+    setChallenge('');
+    reset({
+      title: '',
+      description: '',
+      steps: '',
+      expected: '',
+      actual: '',
+      email: prefilledEmail.current || '',
+      website: '',
+    });
+    if (turnstileId.current) window.turnstile?.reset(turnstileId.current);
+  };
   if (reference)
     return (
       <main className="widget-success">
@@ -178,9 +219,18 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
         <h1>You’re on the team.</h1>
         <p>Your report is in the right hands. Thanks for helping make this product better.</p>
         <span className="badge">{reference}</span>
-        <button className="button button-primary" onClick={() => message('close')}>
-          Done
-        </button>
+        <div className="widget-success-actions">
+          <button className="button button-primary" onClick={() => message('close')}>
+            Done
+          </button>
+          <button
+            type="button"
+            className="button button-outline widget-secondary"
+            onClick={resetReport}
+          >
+            Send another report
+          </button>
+        </div>
         <span className="widget-credit">Sent with BugSnap</span>
       </main>
     );
@@ -265,26 +315,54 @@ export function WidgetForm({ host, channel }: { host: string; channel: string })
             Screenshot <span className="optional">optional</span>
           </label>
           {preview ? (
-            <div className="image-preview">
-              <img src={preview} alt="Screenshot preview" />
-              <button
-                type="button"
-                className="icon-button"
-                aria-label="Remove screenshot"
-                onClick={() => setFile(null)}
-              >
-                <X size={16} />
-              </button>
-            </div>
+            annotating ? (
+              <ScreenshotAnnotator
+                src={preview}
+                onCancel={() => setAnnotating(false)}
+                onSave={(edited) => {
+                  chooseFile(edited);
+                  setAnnotating(false);
+                }}
+              />
+            ) : (
+              <div className="image-preview">
+                <img src={preview} alt="Screenshot preview" />
+                <div className="image-preview-actions">
+                  <button
+                    type="button"
+                    className="button button-outline button-sm"
+                    onClick={() => setAnnotating(true)}
+                    disabled={busy || sent.current}
+                  >
+                    <Pencil size={13} />
+                    Annotate / Redact
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Remove screenshot"
+                    onClick={() => {
+                      setAnnotating(false);
+                      setFile(null);
+                    }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            )
           ) : (
             <label
-              className="upload-zone"
+              className={`upload-zone${dragging ? ' drag-over' : ''}`}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'copy';
+                setDragging(true);
               }}
+              onDragLeave={() => setDragging(false)}
               onDrop={(e) => {
                 e.preventDefault();
+                setDragging(false);
                 const dropped = Array.from(e.dataTransfer.files || []).find((f) =>
                   f.type.startsWith('image/'),
                 );
