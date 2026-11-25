@@ -80,13 +80,17 @@ export default function Documentation() {
             initialization also supports these overrides:
           </p>
           <CopyCode
-            code={`await window.BugSnap.init({\n  projectKey: 'YOUR_PUBLIC_PROJECT_KEY',\n  appOrigin: '${url}',\n  label: 'Send feedback',\n  accent: '#6554e8',\n  position: 'bottom-right',\n});\nwindow.BugSnap.open();\nwindow.BugSnap.close();\nwindow.BugSnap.destroy();`}
+            code={`await window.BugSnap.init({\n  projectKey: 'YOUR_PUBLIC_PROJECT_KEY',\n  appOrigin: '${url}',\n  label: 'Send feedback',\n  accent: '#6554e8',\n  position: 'bottom-right',\n  hideLauncher: false,\n  email: 'user@example.com', // optional prefill\n});\nwindow.BugSnap.open();\nwindow.BugSnap.close();\nwindow.BugSnap.setEmail?.('user@example.com');\nwindow.BugSnap.destroy();`}
           />
           <p>
             Position accepts <code>bottom-right</code> or <code>bottom-left</code>. Labels allow 40
-            characters; accent colors use six-digit hexadecimal. Initialization is idempotent.
-            Destroy removes the button, iframe, event listeners, and timers. Reopen the widget after
-            a 15-minute session expires to obtain a new submission capability.
+            characters; accent colors use six-digit hexadecimal. Set <code>hideLauncher: true</code>{' '}
+            (or <code>data-hide-launcher=&quot;true&quot;</code> on the script tag) when triggering
+            the form from your own UI button via <code>window.BugSnap.open()</code>. Initialization
+            is idempotent. Destroy removes the button, iframe, event listeners, and timers. Reopen
+            the widget after a 15-minute session expires to obtain a new submission capability.
+            Listen for the <code>bugsnap:submitted</code> custom event on <code>window</code> if your
+            app wants to react after a successful report.
           </p>
           <h2 id="domains">Project keys & authorized domains</h2>
           <p>
@@ -118,11 +122,11 @@ export default function Documentation() {
             Avoid putting secrets in URL paths; pathnames are included.
           </p>
           <p>
-            Reporters may select or paste one PNG, JPEG, or WebP image up to 5 MB. The form previews
-            it and allows removal. The server checks file signatures, decodes within a 25-megapixel
-            limit, rejects animation, and re-encodes to WebP without EXIF metadata. There is no
-            hidden capture or redaction tool; reporters should crop sensitive content before
-            selecting an image.
+            Reporters may select, drag and drop, or paste one PNG, JPEG, or WebP image up to 5 MB.
+            The form previews it, lets the reporter mark areas or redact sensitive content directly
+            before upload, and allows removal. The server checks file signatures, decodes within a
+            25-megapixel limit, rejects animation, and re-encodes to WebP without EXIF metadata.
+            There is no automatic or hidden background capture.
           </p>
           <p>
             Screenshots are stored privately and served only after an authenticated attachment
@@ -241,6 +245,10 @@ export default function Documentation() {
               <tr>
                 <td>GET /api/attachments/:id</td>
                 <td>Cookie-authenticated, tenant-authorized private image.</td>
+              </tr>
+              <tr>
+                <td>GET /api/reports/export</td>
+                <td>Cookie-authenticated, filter-scoped CSV report export for workspace members.</td>
               </tr>
               <tr>
                 <td>GET /api/github/connect</td>

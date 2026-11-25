@@ -3,7 +3,7 @@ import { workspace, assertResult } from '@/lib/workspace';
 import { githubConfigured } from '@/lib/env';
 import { PageHeading } from '@/components/page-heading';
 import { ActionForm } from '@/components/action-form';
-import { selectRepository } from '@/app/actions';
+import { selectRepository, syncGithubRepositories } from '@/app/actions';
 export default async function Integrations({
   searchParams,
 }: {
@@ -48,10 +48,21 @@ export default async function Integrations({
             documentation to enable connection.
           </p>
         ) : role !== 'member' ? (
-          <a className="button button-primary" href="/api/github/connect">
-            <PlugZap size={16} />
-            Connect GitHub
-          </a>
+          <div className="inline-actions">
+            <a className="button button-primary" href="/api/github/connect">
+              <PlugZap size={16} />
+              Connect GitHub
+            </a>
+            {!!installations.data?.some((i) => !i.suspended) && (
+              <ActionForm
+                action={syncGithubRepositories}
+                submit="Refresh repositories"
+                className="inline-form"
+              >
+                <></>
+              </ActionForm>
+            )}
+          </div>
         ) : (
           <p>Ask a workspace owner or admin to connect GitHub.</p>
         )}

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { reportSchema, safeLocation, normalizeOrigin, label } from '../packages/shared/src';
+import {
+  reportSchema,
+  safeLocation,
+  normalizeOrigin,
+  label,
+  slugify,
+  isValidDateString,
+} from '../packages/shared/src';
 import { imageType, sanitizeImage } from '../apps/web/src/lib/images';
 import sharp from 'sharp';
 import { sign, verify, webhookValid, boundedBody } from '../apps/web/src/lib/security';
@@ -8,6 +15,8 @@ import {
   exportMarker,
   uncertainGithubFailure,
 } from '../apps/web/src/lib/github-content';
+import { csvCell, reportsToCsv, reportToMarkdown } from '../apps/web/src/lib/report-export';
+import { parseReportFilters } from '../apps/web/src/lib/reports-query';
 import { createHmac } from 'node:crypto';
 const context = {
   origin: 'https://app.example.com',
@@ -136,5 +145,82 @@ describe('tokens, bounds and GitHub safety', () => {
     expect(uncertainGithubFailure(new Error('timeout'))).toBe(true);
     expect(uncertainGithubFailure({ status: 403 })).toBe(false);
     expect(uncertainGithubFailure({ status: 429 })).toBe(false);
+  });
+});
+describe('slugs, filters, CSV and Markdown exports', () => {
+  it('generates clean URL slugs and validates real calendar dates', () => {
+    expect(slugify('Acme Checkout App!')).toBe('acme-checkout-app');
+    expect(slugify('  My   SaaS 2.0  ')).toBe('my-saas-2-0');
+    expect(isValidDateString('2026-11-25')).toBe(true);
+    expect(isValidDateString('2026-02-31')).toBe(false);
+    expect(isValidDateString('not-a-date')).toBe(false);
+  });
+  it('trims optional reporter email in reportSchema', () => {
+    const parsed = reportSchema.parse({
+      title: 'Button error',
+      description: 'Clicking the button fails consistently.',
+      email: '  reporter@example.com  ',
+      context,
+    });
+    expect(parsed.email).toBe('reporter@example.com');
+  });
+  it('neutralizes CSV formula injection and parses filters defensively', () => {
+    expect(csvCell('=SUM(A1:A2)')).toBe('"\'=SUM(A1:A2)"');
+    expect(csvCell('+cmd|"calc"')).toBe('"\'+cmd|""calc"""');
+    const csv = reportsToCsv([
+      {
+        id: 'r1',
+        organization_id: 'o1',
+        project_id: 'p1',
+        reference: 'ACME-1',
+        title: '=1+1',
+        description: 'Detail',
+        steps: '',
+        expected: '',
+        actual: '',
+        reporter_email: null,
+        context: { ...context, environment: 'production' },
+        status: 'new',
+        priority: 'high',
+        assignee_id: null,
+        created_at: '2026-11-25T00:00:00Z',
+        updated_at: '2026-11-25T00:00:00Z',
+        projects: { name: 'Acme' },
+      },
+    ]);
+    expect(csv).toContain('"\'=1+1"');
+    const md = reportToMarkdown({
+      id: 'r1',
+      organization_id: 'o1',
+      project_id: 'p1',
+      reference: 'ACME-1',
+      title: 'Broken checkout',
+      description: 'Clicking checkout fails',
+      steps: 'Open cart',
+      expected: 'Opens payment',
+      actual: 'Nothing',
+      reporter_email: null,
+      context: { ...context, environment: 'production' },
+      status: 'new',
+      priority: 'high',
+      assignee_id: null,
+      created_at: '2026-11-25T00:00:00Z',
+      updated_at: '2026-11-25T00:00:00Z',
+      projects: { name: 'Acme' },
+    });
+    expect(md).toContain('# [ACME-1] Broken checkout');
+    expect(md).not.toContain('/storage/');
+    const filters = parseReportFilters({
+      q: '   ',
+      from: '2026-02-31',
+      to: '2026-11-25',
+      page: '2.7',
+      sort: 'priority',
+    });
+    expect(filters.q).toBe('');
+    expect(filters.from).toBeUndefined();
+    expect(filters.to).toBe('2026-11-25');
+    expect(filters.page).toBe(2);
+    expect(filters.sort).toBe('priority');
   });
 });

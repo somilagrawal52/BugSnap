@@ -84,19 +84,31 @@ export default async function Team() {
           {!!invitations?.data?.length && (
             <>
               <h3>Invitations</h3>
-              {invitations.data.map((i) => (
-                <div className="invitation-row" key={i.id}>
-                  <span>{i.email}</span>
-                  <Badge>
-                    {i.accepted_at
-                      ? 'Accepted'
-                      : new Date(i.expires_at) < new Date()
-                        ? 'Expired'
-                        : 'Pending'}
-                  </Badge>
-                  <small>{i.role}</small>
-                </div>
-              ))}
+              {invitations.data.map((i) => {
+                const pending = !i.accepted_at && new Date(i.expires_at) >= new Date();
+                return (
+                  <div className="invitation-row" key={i.id}>
+                    <span>{i.email}</span>
+                    <Badge>
+                      {i.accepted_at
+                        ? 'Accepted'
+                        : new Date(i.expires_at) < new Date()
+                          ? 'Expired'
+                          : 'Pending'}
+                    </Badge>
+                    <small>{i.role}</small>
+                    {!i.accepted_at && (
+                      <ActionForm
+                        className="inline-form"
+                        action={revokeInvitation.bind(null, i.id)}
+                        submit={pending ? 'Revoke' : 'Remove'}
+                      >
+                        <></>
+                      </ActionForm>
+                    )}
+                  </div>
+                );
+              })}
             </>
           )}
         </section>

@@ -330,4 +330,27 @@ describe('membership archival', () => {
     await db.query("select accept_invitation('reactivate-hash')");
     expect((await db.query('select * from reports')).rows.length).toBeGreaterThan(0);
   });
+  it('admins can revoke pending invitations and members or other tenants cannot', async () => {
+    await asUser(alice);
+    await db.query("select invite_member($1,'revoke@example.test','member','revoke-hash')", [orgA]);
+    const inv = await scalar("select id from organization_invitations where token_hash='revoke-hash'");
+    await asUser(member);
+    await expect(db.query('select revoke_invitation($1,$2)', [orgA, inv.id])).rejects.toThrow(
+      /Administrator required/,
+    );
+    await asUser(bob);
+    await expect(db.query('select revoke_invitation($1,$2)', [orgA, inv.id])).rejects.toThrow(
+      /Administrator required/,
+    );
+    await asUser(alice);
+    await db.query('select revoke_invitation($1,$2)', [orgA, inv.id]);
+    await expect(db.query('select revoke_invitation($1,$2)', [orgA, inv.id])).rejects.toThrow(
+      /Invitation unavailable/,
+    );
+    const audit = await scalar(
+      "select action from audit_logs where organization_id=$1 and action='invitation.revoked'",
+      [orgA],
+    );
+    expect(audit.action).toBe('invitation.revoked');
+  });
 });

@@ -78,4 +78,20 @@ describe('host SDK', () => {
       ['origin', 'pathname', 'browser', 'os', 'viewport', 'timestamp'].sort(),
     );
   });
+  it('supports hideLauncher and programmatic open/close/isOpen', async () => {
+    await init({
+      projectKey: 'bs_' + 'a'.repeat(32),
+      appOrigin: 'https://bugsnap.example',
+      hideLauncher: true,
+      email: 'user@example.com',
+    });
+    const shadow = document.querySelector('#bugsnap-widget')!.shadowRoot!;
+    const button = shadow.querySelector('button')!;
+    expect(button.hidden).toBe(true);
+    expect(window.BugSnap?.isOpen?.()).toBe(false);
+    window.BugSnap?.open();
+    expect(window.BugSnap?.isOpen?.()).toBe(true);
+    window.BugSnap?.close();
+    expect(window.BugSnap?.isOpen?.()).toBe(false);
+  });
 });

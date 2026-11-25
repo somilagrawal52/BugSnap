@@ -7,10 +7,17 @@ test('public navigation, honest pricing, and documentation', async ({ page }) =>
   await page.getByRole('link', { name: 'Documentation', exact: true }).first().click();
   await expect(page.getByRole('heading', { name: 'Install your widget' })).toBeVisible();
 });
-test('protected dashboard redirects without a session', async ({ page }) => {
+test('protected dashboard and export API deny unauthenticated requests', async ({ page, request }) => {
   await page.goto('/dashboard/reports');
   await expect(page).toHaveURL(/\/(login|setup)$/);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  expect([401, 503]).toContain((await request.get('/api/reports/export')).status());
+  const preflight = await request.fetch('/api/widget/config', {
+    method: 'OPTIONS',
+    headers: { origin: 'https://app.example.com' },
+  });
+  expect(preflight.status()).toBe(204);
+  expect(preflight.headers()['access-control-allow-origin']).toBe('https://app.example.com');
 });
 test('signup validation does not submit an invalid account', async ({ page }) => {
   await page.goto('/signup');
